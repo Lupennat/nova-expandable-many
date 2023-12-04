@@ -42,6 +42,8 @@
             :via-has-one="false"
             :via-many-to-many="viaManyToMany"
             :via-resource="viaResource"
+            :show-search="showSearch"
+            @searched="search = $event"
         />
 
         <LoadingView :loading="loading">
@@ -197,9 +199,7 @@
         watch: {
             expandableOpened(value) {
                 this.collapsed = !value;
-                if (this.filterHasLoaded) {
-                    this.clearSelectedFilters();
-                }
+                this.resetToDefaults();
                 this.handleCollapsableChange();
             }
         },
@@ -562,6 +562,19 @@
              */
             updatePerPageChanged(perPage) {
                 this.perPage = perPage;
+            },
+
+            resetToDefaults() {
+                if (this.filterHasLoaded) {
+                    this.clearSelectedFilters();
+                }
+                this.search = '';
+                this.page = 1;
+                this.perPage = this.initialPerPage;
+                this.orderBy = '';
+                this.orderByDirection = null;
+                this.trashed = '';
+                this.selectedResources = [];
             }
         },
 
@@ -896,6 +909,10 @@
 
             selectAllOrSelectAllMatchingChecked() {
                 return this.selectAllChecked || this.selectAllMatchingChecked;
+            },
+
+            showSearch() {
+                return this.filterHasLoaded && this.resourceInformation && this.resourceInformation.searchable;
             },
 
             /**

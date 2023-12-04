@@ -30,7 +30,7 @@ ExpandableMany Package automatically enable a new method `expandable` for all Ma
 - MorphMany
 - MorphToMany
 
-The relation table (without any actions, lenses and without the toolbar) will be displayed as a collapsable row on the index page.
+The relation table (without any custom actions and lenses) will be displayed as a collapsable row on the index page.
 
 ```php
 

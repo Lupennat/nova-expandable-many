@@ -18,6 +18,13 @@
                 />
             </div>
 
+            <IndexSearchInput
+                v-if="showSearch"
+                :searchable="showSearch"
+                v-model:keyword="search"
+                @update:keyword="updateSearch"
+            />
+
             <!-- Toolbar Items -->
             <div class="h-9 ml-auto flex items-center pr-2 md:pr-3">
                 <!-- Resource Polling -->
@@ -75,11 +82,12 @@
 
 <script>
     import DeleteMenu from './DeleteMenu';
+    import IndexSearchInput from './IndexSearchInput';
 
     export default {
-        emits: ['start-polling', 'stop-polling', 'deselect'],
+        emits: ['start-polling', 'stop-polling', 'deselect', 'searched'],
 
-        components: { DeleteMenu },
+        components: { DeleteMenu, IndexSearchInput },
 
         props: [
             'allMatchingResourceCount',
@@ -119,8 +127,22 @@
             'updatePerPageChanged',
             'viaHasOne',
             'viaManyToMany',
-            'viaResource'
+            'viaResource',
+            'showSearch'
         ],
+
+        data() {
+            return {
+                search: ''
+            };
+        },
+
+        methods: {
+            updateSearch(search) {
+                this.search = search;
+                this.$emit('searched', this.search);
+            }
+        },
 
         computed: {
             filterPerPageOptions() {
