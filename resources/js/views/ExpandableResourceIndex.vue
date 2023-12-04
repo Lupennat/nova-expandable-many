@@ -260,6 +260,8 @@
                 this.resourceResponseError = null;
 
                 this.$nextTick(() => {
+                    this.clearResourceSelections();
+
                     return minimum(
                         Nova.request().get('/nova-api/' + this.resourceName, {
                             params: this.resourceRequestQueryString,
@@ -294,7 +296,13 @@
             },
 
             handleResourcesLoaded() {
-                this.loading = false;
+                this.loading = false
+                
+                if (this.resourceResponse.total !== null) {
+                    this.allMatchingResourceCount = this.resourceResponse.total
+                } else {
+                    this.getAllMatchingResourceCount()
+                }
 
                 Nova.$emit('resources-loaded', {
                     resourceName: this.resourceName,
@@ -406,7 +414,19 @@
                 }
             },
 
-            updateSelectionStatus() {},
+            /*
+            * Update the resource selection status
+            */
+            updateSelectionStatus(resource) {
+                if (!_.includes(this.selectedResources, resource)) {
+                    this.selectedResources.push(resource)
+                } else {
+                    const index = this.selectedResources.indexOf(resource)
+                    if (index > -1) this.selectedResources.splice(index, 1)
+                }
+
+                this.selectAllMatchingResources = false
+            },
 
             /**
              * Sort the resources by the given field.
@@ -574,7 +594,6 @@
                 this.orderBy = '';
                 this.orderByDirection = null;
                 this.trashed = '';
-                this.selectedResources = [];
             }
         },
 
