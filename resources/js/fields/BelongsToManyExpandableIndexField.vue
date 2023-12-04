@@ -1,6 +1,6 @@
 <template>
     <div :class="`text-${field.textAlign}`">
-        <ExpandableField v-slot="{ expandableOpened, expandableUid }">
+        <ExpandableField :field="field" :resource="resource" v-slot="{ expandableOpened, expandableUid }">
             <ExpandableResourceIndex
                 :field="field"
                 :resource-name="field.resourceName"

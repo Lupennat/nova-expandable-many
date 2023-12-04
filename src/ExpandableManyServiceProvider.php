@@ -26,7 +26,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
             Nova::script('expandable-many', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
-        FieldCollection::macro('withoutListableFieldsNotExpandable', function (NovaRequest $request, $resource) {
+        FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
             return $this->reject(function ($field) {
                 return $field instanceof ListableField && (!property_exists($field, 'expandableHook') || !$field->expandableHook);
             });
