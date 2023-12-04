@@ -1,5 +1,49 @@
 <template>
     <Card v-if="!shouldBeCollapsed">
+        <ResourceTableToolbar
+            :all-matching-resource-count="allMatchingResourceCount"
+            :authorized-to-delete-any-resources="authorizedToDeleteAnyResources"
+            :authorized-to-delete-selected-resources="authorizedToDeleteSelectedResources"
+            :authorized-to-force-delete-any-resources="authorizedToForceDeleteAnyResources"
+            :authorized-to-force-delete-selected-resources="authorizedToForceDeleteSelectedResources"
+            :authorized-to-restore-any-resources="authorizedToRestoreAnyResources"
+            :authorized-to-restore-selected-resources="authorizedToRestoreSelectedResources"
+            :clear-selected-filters="clearSelectedFilters"
+            :close-delete-modal="closeDeleteModal"
+            :currently-polling="currentlyPolling"
+            :current-page-count="resources.length"
+            :delete-all-matching-resources="deleteAllMatchingResources"
+            :delete-selected-resources="deleteSelectedResources"
+            :filter-changed="filterChanged"
+            :force-delete-all-matching-resources="forceDeleteAllMatchingResources"
+            :force-delete-selected-resources="forceDeleteSelectedResources"
+            :has-filters="hasFilters"
+            :per-page="currentPerPage"
+            :per-page-options="perPageOptions"
+            :resources="resources"
+            :resource-information="resourceInformation"
+            :resource-name="resourceName"
+            :restore-all-matching-resources="restoreAllMatchingResources"
+            :restore-selected-resources="restoreSelectedResources"
+            :select-all-matching-checked="selectAllMatchingResources"
+            @deselect="clearResourceSelections"
+            :selected-resources="selectedResources"
+            :should-show-check-boxes="shouldShowCheckBoxes"
+            :should-show-delete-menu="shouldShowDeleteMenu"
+            :should-show-polling-toggle="shouldShowPollingToggle"
+            :soft-deletes="softDeletes"
+            @start-polling="startPolling"
+            @stop-polling="stopPolling"
+            :toggle-select-all="toggleSelectAll"
+            :toggle-select-all-matching="toggleSelectAllMatching"
+            :trashed="trashed"
+            :trashed-changed="trashedChanged"
+            :update-per-page-changed="updatePerPageChanged"
+            :via-has-one="false"
+            :via-many-to-many="viaManyToMany"
+            :via-resource="viaResource"
+        />
+
         <LoadingView :loading="loading">
             <IndexErrorDialog
                 v-if="resourceResponseError != null"
@@ -26,6 +70,10 @@
                     :resource-name="resourceName"
                     :resources="resources"
                     :singular-name="singularName"
+                    :selected-resources="selectedResources"
+                    :selected-resource-ids="selectedResourceIds"
+                    :actions-are-available="false"
+                    :should-show-checkboxes="shouldShowCheckBoxes"
                     :via-resource="viaResource"
                     :via-resource-id="viaResourceId"
                     :via-relationship="viaRelationship"
@@ -61,9 +109,10 @@
 <script>
     import { CancelToken, isCancel } from 'axios';
     import { Deletable, InteractsWithResourceInformation, SupportsPolling, mapProps } from '@/mixins';
+    import ResourceTable from '../components/ResourceTable';
+    import ResourceTableToolbar from '../components/ResourceTableToolbar';
 
     import { computed } from 'vue';
-    import { escapeUnicode } from '@/util/escapeUnicode';
 
     import { minimum } from '@/util';
     import { mapActions } from 'vuex';
@@ -73,11 +122,13 @@
 
         mixins: [Deletable, InteractsWithResourceInformation, SupportsPolling],
 
+        components: { ResourceTable, ResourceTableToolbar },
+
         props: {
             ...mapProps(['resourceName', 'viaResource', 'viaResourceId', 'viaRelationship', 'relationshipType']),
 
             field: {
-                type: Object,
+                type: Object
             },
             initialPerPage: {
                 type: Number,
@@ -105,7 +156,13 @@
                 authorizedToViewAnyResources: computed(() => this.authorizedToViewAnyResources),
                 authorizedToUpdateAnyResources: computed(() => this.authorizedToUpdateAnyResources),
                 authorizedToDeleteAnyResources: computed(() => this.authorizedToDeleteAnyResources),
-                authorizedToRestoreAnyResources: computed(() => this.authorizedToRestoreAnyResources)
+                authorizedToRestoreAnyResources: computed(() => this.authorizedToRestoreAnyResources),
+                selectedResourcesCount: computed(() => this.selectedResources.length),
+                selectAllChecked: computed(() => this.selectAllChecked),
+                selectAllMatchingChecked: computed(() => this.selectAllMatchingChecked),
+                selectAllOrSelectAllMatchingChecked: computed(() => this.selectAllOrSelectAllMatchingChecked),
+                selectAllAndSelectAllMatchingChecked: computed(() => this.selectAllAndSelectAllMatchingChecked),
+                selectAllIndeterminate: computed(() => this.selectAllIndeterminate)
             };
         },
 
@@ -113,6 +170,8 @@
             return {
                 allMatchingResourceCount: 0,
                 currentPageLoadMore: null,
+                deleteModalOpen: false,
+                lens: false,
                 page: 1,
                 loading: true,
                 resourceResponse: null,
@@ -120,6 +179,7 @@
                 canceller: null,
                 resources: [],
                 selectedResources: [],
+                selectAllMatchingResources: false,
                 perPage: this.initialPerPage,
                 softDeletes: false,
                 sortable: true,
@@ -129,13 +189,17 @@
                 orderByDirection: null,
                 trashed: '',
                 search: '',
-                filters: {}
+                filterHasLoaded: false,
+                filterIsActive: false
             };
         },
 
         watch: {
             expandableOpened(value) {
                 this.collapsed = !value;
+                if (this.filterHasLoaded) {
+                    this.clearSelectedFilters();
+                }
                 this.handleCollapsableChange();
             }
         },
@@ -146,6 +210,27 @@
         async created() {
             Nova.$on('refresh-resources', this.getResources);
             this.collapsed = !this.expandableOpened;
+            this.$watch(
+                () => {
+                    return (
+                        this.encodedFilters +
+                        this.currentSearch +
+                        this.currentPage +
+                        this.currentPerPage +
+                        this.currentOrderBy +
+                        this.currentOrderByDirection +
+                        this.currentTrashed
+                    );
+                },
+                () => {
+                    if (this.currentPage === 1) {
+                        this.currentPageLoadMore = null;
+                    }
+                    if (!this.collapsed) {
+                        this.getResources();
+                    }
+                }
+            );
         },
 
         /**
@@ -160,10 +245,6 @@
         },
 
         methods: {
-            async initializeFilters(lens) {
-                this.filterHasLoaded = true;
-            },
-
             ...mapActions(['fetchPolicies']),
 
             /**
@@ -259,7 +340,6 @@
                     });
             },
 
-
             /**
              * Get the count of all of the matching resources.
              */
@@ -314,7 +394,11 @@
                 if (!this.collapsed) {
                     Nova.$emit('expandable-row-opened', this.expandableResourceId, this.expandableFieldId);
 
+                    if (!this.filterHasLoaded) {
+                        await this.initializeFilters(null);
+                    }
                     await this.getResources();
+
                     await this.getAuthorizationToRelate();
                     this.restartPolling();
                 } else {
@@ -351,6 +435,133 @@
              */
             selectPage(page) {
                 this.page = page;
+            },
+
+            /**
+             * Clear filters and reset the resource table
+             */
+            async clearSelectedFilters() {
+                await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
+                    resourceName: this.resourceName
+                });
+
+                this.page = 1;
+
+                Nova.$emit('filter-reset');
+            },
+
+            /**
+             * Handle a filter state change.
+             */
+            filterChanged() {
+                let filtersAreApplied = this.$store.getters[`${this.resourceName}/filtersAreApplied`];
+
+                if (filtersAreApplied || this.filterIsActive) {
+                    this.filterIsActive = true;
+                    this.page = 1;
+                }
+            },
+
+            /**
+             * Set up filters for the current view
+             */
+            async initializeFilters() {
+                if (this.filterHasLoaded === true) {
+                    return;
+                }
+
+                // Clear out the filters from the store first
+                this.$store.commit(`${this.resourceName}/clearFilters`);
+
+                await this.$store.dispatch(
+                    `${this.resourceName}/fetchFilters`,
+                    _.pickBy(
+                        {
+                            resourceName: this.resourceName,
+                            viaResource: this.viaResource,
+                            viaResourceId: this.viaResourceId,
+                            viaRelationship: this.viaRelationship,
+                            relationshipType: this.relationshipType
+                        },
+                        _.identity
+                    )
+                );
+
+                await this.initializeState();
+
+                this.filterHasLoaded = true;
+            },
+
+            /**
+             * Initialize the filter state
+             */
+            async initializeState() {
+                await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
+                    resourceName: this.resourceName
+                });
+            },
+
+            /**
+             * Clear the selected resouces and the "select all" states.
+             */
+            clearResourceSelections() {
+                this.selectAllMatchingResources = false;
+                this.selectedResources = [];
+            },
+
+            /**
+             * Toggle the selection of all matching resources in the database
+             */
+            toggleSelectAllMatching(e) {
+                e.preventDefault();
+
+                if (!this.selectAllMatchingResources) {
+                    this.selectAllResources();
+                    this.selectAllMatchingResources = true;
+                } else {
+                    this.selectAllMatchingResources = false;
+                }
+            },
+
+            /**
+             * Toggle the selection of all resources
+             */
+            toggleSelectAll(e) {
+                e.preventDefault();
+
+                if (this.selectAllChecked) {
+                    this.clearResourceSelections();
+                } else {
+                    this.selectAllResources();
+                }
+            },
+
+            /**
+             * Select all of the available resources
+             */
+            selectAllResources() {
+                this.selectedResources = this.resources.slice(0);
+            },
+
+            /**
+             * Close the delete modal.
+             */
+            closeDeleteModal() {
+                this.deleteModalOpen = false;
+            },
+
+            /**
+             * Update the trashed constraint for the resource listing.
+             */
+            trashedChanged(trashedStatus) {
+                this.trashed = trashedStatus;
+            },
+
+            /**
+             * Update the per page parameter in the query string
+             */
+            updatePerPageChanged(perPage) {
+                this.perPage = perPage;
             }
         },
 
@@ -420,6 +631,27 @@
             },
 
             /**
+             * Determine whether the delete menu should be shown to the user
+             */
+            shouldShowDeleteMenu() {
+                return Boolean(this.selectedResources.length > 0) && this.canShowDeleteMenu;
+            },
+
+            /**
+             * Determine if any selected resources may be deleted.
+             */
+            authorizedToDeleteSelectedResources() {
+                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToDelete));
+            },
+
+            /**
+             * Determine if any selected resources may be force deleted.
+             */
+            authorizedToForceDeleteSelectedResources() {
+                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToForceDelete));
+            },
+
+            /**
              * Determine if the user is authorized to view any listed resource.
              */
             authorizedToViewAnyResources() {
@@ -433,8 +665,26 @@
              */
             authorizedToUpdateAnyResources() {
                 return (
-                    this.resources.length > 0 && Boolean(_.find(this.resources, resource => resource.authorizedToUpdate))
+                    this.resources.length > 0 &&
+                    Boolean(_.find(this.resources, resource => resource.authorizedToUpdate))
                 );
+            },
+
+            /**
+             * Determine if the user is authorized to force delete any listed resource.
+             */
+            authorizedToForceDeleteAnyResources() {
+                return (
+                    this.resources.length > 0 &&
+                    Boolean(_.find(this.resources, resource => resource.authorizedToForceDelete))
+                );
+            },
+
+            /**
+             * Determine if any selected resources may be restored.
+             */
+            authorizedToRestoreSelectedResources() {
+                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToRestore));
             },
 
             /**
@@ -442,7 +692,8 @@
              */
             authorizedToDeleteAnyResources() {
                 return (
-                    this.resources.length > 0 && Boolean(_.find(this.resources, resource => resource.authorizedToDelete))
+                    this.resources.length > 0 &&
+                    Boolean(_.find(this.resources, resource => resource.authorizedToDelete))
                 );
             },
 
@@ -451,7 +702,8 @@
              */
             authorizedToRestoreAnyResources() {
                 return (
-                    this.resources.length > 0 && Boolean(_.find(this.resources, resource => resource.authorizedToRestore))
+                    this.resources.length > 0 &&
+                    Boolean(_.find(this.resources, resource => resource.authorizedToRestore))
                 );
             },
 
@@ -474,6 +726,15 @@
              */
             hasPreviousPage() {
                 return Boolean(this.resourceResponse && this.resourceResponse.prev_page_url);
+            },
+
+            /**
+             * The per-page options configured for this resource.
+             */
+            perPageOptions() {
+                if (this.resourceResponse) {
+                    return this.resourceResponse.per_page_options;
+                }
             },
 
             /**
@@ -536,7 +797,7 @@
              * Return the total pages for the resource.
              */
             totalPages() {
-                return Math.ceil(this.allMatchingResourceCount / this.currentPerPage)
+                return Math.ceil(this.allMatchingResourceCount / this.currentPerPage);
             },
 
             /**
@@ -545,22 +806,6 @@
             currentSearch() {
                 return this.search;
             },
-
-            encodedFilters() {
-                return btoa(escapeUnicode(JSON.stringify(this.currentFilters)));
-            },
-
-            /**
-             * The current unencoded filter value payload
-             */
-            currentFilters() {
-                return this.filters;
-            },
-
-            /**
-             * Return the current filters encoded to a string.
-             */
-            currentEncodedFilters: (state, getters) => btoa(escapeUnicode(JSON.stringify(getters.currentFilters))),
 
             /**
              * Get the default label for the create button
@@ -589,6 +834,75 @@
              */
             shouldShowPagination() {
                 return this.resourceResponse && (this.hasResources || this.hasPreviousPage);
+            },
+
+            /**
+             * Determine if the resource has any filters
+             */
+            hasFilters() {
+                return this.$store.getters[`${this.resourceName}/hasFilters`];
+            },
+
+            /**
+             * Return the currently encoded filter string from the store
+             */
+            encodedFilters() {
+                return this.$store.getters[`${this.resourceName}/currentEncodedFilters`];
+            },
+
+            /**
+             * Determine whether to show the selection checkboxes for resources
+             */
+            shouldShowCheckBoxes() {
+                return (
+                    Boolean(this.hasResources) && Boolean(this.authorizedToDeleteAnyResources || this.canShowDeleteMenu)
+                );
+            },
+
+            /**
+             * Determine if Select All Dropdown state is indeterminate.
+             */
+            selectAllIndeterminate() {
+                return (
+                    Boolean(this.selectAllChecked || this.selectAllMatchingChecked) &&
+                    Boolean(!this.selectAllAndSelectAllMatchingChecked)
+                );
+            },
+
+            selectAllAndSelectAllMatchingChecked() {
+                return this.selectAllChecked && this.selectAllMatchingChecked;
+            },
+
+            /**
+             * Determine if all matching resources are selected.
+             */
+            selectAllMatchingChecked() {
+                return this.selectAllMatchingResources;
+            },
+
+            /**
+             * Get the IDs for the selected resources.
+             */
+            selectedResourceIds() {
+                return _.map(this.selectedResources, resource => resource.id.value);
+            },
+
+            /**
+             * Determine if all resources are selected on the page.
+             */
+            selectAllChecked() {
+                return this.selectedResources.length == this.resources.length;
+            },
+
+            selectAllOrSelectAllMatchingChecked() {
+                return this.selectAllChecked || this.selectAllMatchingChecked;
+            },
+
+            /**
+             * Determine if the current resource listing is via a many-to-many relationship.
+             */
+            viaManyToMany() {
+                return this.relationshipType == 'belongsToMany' || this.relationshipType == 'morphToMany';
             }
         }
     };

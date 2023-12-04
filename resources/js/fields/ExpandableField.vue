@@ -12,7 +12,7 @@
         </span>
         <Teleport :to="expandableRow" v-if="isMounted">
             <td :colspan="columnCount">
-                <div class="py-4">
+                <div class="py-4 px-2">
                     <slot :expandable-opened="expandableOpened" :expandable-uid="uid"></slot>
                 </div>
             </td>
@@ -41,7 +41,7 @@
         },
         created() {
             Nova.$on('expandable-row-opened', (resourceId, uid) => {
-                if (this.resource.id.value === resourceId && uid !== this.uid) {
+                if (this.resource.id.value !== resourceId || uid !== this.uid) {
                     this.expandableOpened = false;
                 }
             });

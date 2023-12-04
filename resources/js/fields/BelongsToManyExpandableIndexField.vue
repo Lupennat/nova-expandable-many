@@ -23,7 +23,7 @@
 <script>
     import { mapProps } from '@/mixins';
     import ExpandableField from './ExpandableField';
-    import ExpandableResourceIndex from './ExpandableResourceIndex';
+    import ExpandableResourceIndex from '../views/ExpandableResourceIndex';
 
     export default {
         emits: ['actionExecuted'],
