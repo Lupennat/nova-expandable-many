@@ -2,6 +2,7 @@
 2. [Installation](#Installation)
 3. [Usage](#Usage)
 4. [Changelog](CHANGELOG.md)
+5. [Credits](#Credits)
 
 ## Requirements
 
@@ -51,3 +52,7 @@ class User extends Resource
 ```
 
 > By Default expandable use `Show` and `Hide` as labels.
+
+## Credits
+
+This package is based on the original idea from [Nova Expandable Row](https://github.com/SPRIGS/nova-expandable-row)

@@ -6,11 +6,11 @@ use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Contracts\ListableField;
 use Laravel\Nova\Events\ServingNova;
 use Laravel\Nova\Fields\BelongsToMany;
+use Laravel\Nova\Fields\Field;
 use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\HasManyThrough;
 use Laravel\Nova\Fields\MorphToMany;
-use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 
 class ExpandableManyServiceProvider extends ServiceProvider
@@ -32,36 +32,40 @@ class ExpandableManyServiceProvider extends ServiceProvider
             });
         });
 
-        BelongsToMany::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
-            $this->component = 'morph-to-many-expandable-field';
-            $this->expandableHook = true;
-            $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+        Field::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
+            if ($this instanceof BelongsToMany) {
+                $this->expandableHook = true;
+                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+                $this->component = 'belongs-to-many-expandable-field';
 
-            return $this;
-        });
+                return $this;
+            }
 
-        HasMany::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
-            $this->component = 'morph-to-many-expandable-field';
-            $this->expandableHook = true;
-            $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+            if ($this instanceof HasMany) {
+                $this->expandableHook = true;
+                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+                $this->component = 'has-many-expandable-field';
 
-            return $this;
-        });
+                return $this;
+            }
 
-        HasManyThrough::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
-            $this->component = 'morph-to-many-expandable-field';
-            $this->expandableHook = true;
-            $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+            if ($this instanceof HasManyThrough) {
+                $this->expandableHook = true;
+                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+                $this->component = 'has-many-through-expandable-field';
 
-            return $this;
-        });
+                return $this;
+            }
 
-        MorphToMany::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
-            $this->component = 'morph-to-many-expandable-field';
-            $this->expandableHook = true;
-            $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+            if ($this instanceof MorphToMany) {
+                $this->expandableHook = true;
+                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+                $this->component = 'morph-to-many-expandable-field';
 
-            return $this;
+                return $this;
+            }
+
+            throw new \Exception('Field ' . get_class($this) . ' does not support expandable()');
         });
     }
 

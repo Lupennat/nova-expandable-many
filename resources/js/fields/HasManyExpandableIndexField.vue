@@ -1,11 +1,11 @@
 <template>
-    <div :class="`text-${field.textAlign}`">
+    <span :class="`text-${field.textAlign}`">
         <ExpandableField :field="field" :resource="resource" v-slot="{ expandableOpened, expandableUid }">
             <ExpandableResourceIndex
                 :field="field"
                 :resource-name="field.resourceName"
                 :via-resource="resourceName"
-                :via-resource-id="resourceId"
+                :via-resource-id="resource.id.value"
                 :via-relationship="field.hasManyRelationship"
                 :relationship-type="'hasMany'"
                 @actionExecuted="actionExecuted"
@@ -14,10 +14,10 @@
                 :should-override-meta="false"
                 :expandable-opened="expandableOpened"
                 :expandable-field-id="expandableUid"
-                :expandable-resource-id="resourceId"
+                :expandable-resource-id="resource.id.value"
             />
         </ExpandableField>
-    </div>
+    </span>
 </template>
 
 <script>
@@ -29,7 +29,7 @@
         emits: ['actionExecuted'],
 
         props: {
-            ...mapProps(['resourceId', 'field']),
+            ...mapProps(['field']),
             resourceName: {},
             resource: {}
         },
