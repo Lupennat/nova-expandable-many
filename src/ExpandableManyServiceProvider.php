@@ -32,10 +32,22 @@ class ExpandableManyServiceProvider extends ServiceProvider
             });
         });
 
-        Field::macro('expandable', function (string $showLabel = 'Show', string $hideLabel = 'Hide') {
+        Field::macro('expandable', function () {
+            if (!array_key_exists('expandableShowLabel', $this->meta)) {
+                $this->withMeta(['expandableShowLabel' => 'Show']);
+            }
+
+            if (!array_key_exists('expandableShowLabel', $this->meta)) {
+                $this->withMeta(['expandableHideLabel' => 'Hide']);
+            }
+
+            if (!array_key_exists('expandableStoreStatus', $this->meta)) {
+                $this->withMeta(['expandableStoreStatus' => '']);
+            }
+
             if ($this instanceof BelongsToMany) {
                 $this->expandableHook = true;
-                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
+
                 $this->component = 'belongs-to-many-expandable-field';
 
                 return $this;
@@ -43,7 +55,6 @@ class ExpandableManyServiceProvider extends ServiceProvider
 
             if ($this instanceof HasMany) {
                 $this->expandableHook = true;
-                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
                 $this->component = 'has-many-expandable-field';
 
                 return $this;
@@ -51,7 +62,6 @@ class ExpandableManyServiceProvider extends ServiceProvider
 
             if ($this instanceof HasManyThrough) {
                 $this->expandableHook = true;
-                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
                 $this->component = 'has-many-through-expandable-field';
 
                 return $this;
@@ -59,7 +69,6 @@ class ExpandableManyServiceProvider extends ServiceProvider
 
             if ($this instanceof MorphToMany) {
                 $this->expandableHook = true;
-                $this->withMeta(['expandableShowLabel' => $showLabel, 'expandableHideLabel' => $hideLabel]);
                 $this->component = 'morph-to-many-expandable-field';
 
                 return $this;

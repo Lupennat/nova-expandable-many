@@ -1,6 +1,11 @@
 <template>
     <span :class="`text-${field.textAlign}`">
-        <ExpandableField :field="field" :resource="resource" v-slot="{ expandableOpened, expandableUid }">
+        <ExpandableField
+            :field="field"
+            :resource="resource"
+            :resource-name="resourceName"
+            v-slot="{ expandableOpened, expandableStoreQuery }"
+        >
             <ExpandableResourceIndex
                 :field="field"
                 :resource-name="field.resourceName"
@@ -8,13 +13,12 @@
                 :via-resource-id="resource.id.value"
                 :via-relationship="field.hasManyRelationship"
                 :relationship-type="'hasMany'"
-                @actionExecuted="actionExecuted"
                 :load-cards="false"
                 :initialPerPage="field.perPage || 5"
                 :should-override-meta="false"
+                :should-enable-shortcut="false"
                 :expandable-opened="expandableOpened"
-                :expandable-field-id="expandableUid"
-                :expandable-resource-id="resource.id.value"
+                :expandable-store-query="expandableStoreQuery"
             />
         </ExpandableField>
     </span>
@@ -26,22 +30,11 @@
     import ExpandableResourceIndex from '../views/ExpandableResourceIndex';
 
     export default {
-        emits: ['actionExecuted'],
-
         props: {
-            ...mapProps(['field']),
+            ...mapProps(['resourceId', 'field']),
             resourceName: {},
             resource: {}
         },
-        components: { ExpandableField, ExpandableResourceIndex },
-
-        methods: {
-            /**
-             * Handle the actionExecuted event and pass it up the chain.
-             */
-            actionExecuted() {
-                this.$emit('actionExecuted');
-            }
-        }
+        components: { ExpandableField, ExpandableResourceIndex }
     };
 </script>

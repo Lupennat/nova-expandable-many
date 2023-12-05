@@ -1,6 +1,7 @@
 <template>
     <Card v-if="!shouldBeCollapsed">
         <ResourceTableToolbar
+            v-if="filterHasLoaded"
             :all-matching-resource-count="allMatchingResourceCount"
             :authorized-to-delete-any-resources="authorizedToDeleteAnyResources"
             :authorized-to-delete-selected-resources="authorizedToDeleteSelectedResources"
@@ -18,7 +19,7 @@
             :force-delete-all-matching-resources="forceDeleteAllMatchingResources"
             :force-delete-selected-resources="forceDeleteSelectedResources"
             :has-filters="hasFilters"
-            :per-page="currentPerPage"
+            :per-page="perPage"
             :per-page-options="perPageOptions"
             :resources="resources"
             :resource-information="resourceInformation"
@@ -43,7 +44,8 @@
             :via-many-to-many="viaManyToMany"
             :via-resource="viaResource"
             :show-search="showSearch"
-            @searched="search = $event"
+            :search="search"
+            @searched="performLazySearch"
         />
 
         <LoadingView :loading="loading">
@@ -98,10 +100,10 @@
                     :load-more="loadMore"
                     :select-page="selectPage"
                     :total-pages="totalPages"
-                    :current-page="currentPage"
-                    :per-page="currentPerPage"
+                    :current-page="page"
+                    :per-page="perPage"
                     :resource-count-label="resourceCountLabel"
-                    :current-resource-count="currentResourceCount"
+                    :current-resource-count="resourceCount"
                     :all-matching-resource-count="allMatchingResourceCount"
                 />
             </template>
@@ -110,7 +112,8 @@
 </template>
 <script>
     import { CancelToken, isCancel } from 'axios';
-    import { Deletable, InteractsWithResourceInformation, SupportsPolling, mapProps } from '@/mixins';
+    import { Deletable, InteractsWithResourceInformation, SupportsPolling, mapProps, RouteParameters } from '@/mixins';
+    import InteractsWithQueryString from '../mixins/InteractsWithQueryString';
     import ResourceTable from '../components/ResourceTable';
     import ResourceTableToolbar from '../components/ResourceTableToolbar';
 
@@ -122,7 +125,13 @@
     export default {
         name: 'ExpandableResourceIndex',
 
-        mixins: [Deletable, InteractsWithResourceInformation, SupportsPolling],
+        mixins: [
+            Deletable,
+            InteractsWithResourceInformation,
+            SupportsPolling,
+            RouteParameters,
+            InteractsWithQueryString
+        ],
 
         components: { ResourceTable, ResourceTableToolbar },
 
@@ -144,11 +153,8 @@
                 type: Boolean,
                 required: true
             },
-            expandableFieldId: {
-                type: String,
-                required: true
-            },
-            expandableResourceId: {
+            expandableStoreQuery: {
+                type: Boolean,
                 required: true
             }
         },
@@ -171,7 +177,7 @@
         data() {
             return {
                 allMatchingResourceCount: 0,
-                currentPageLoadMore: null,
+                pageLoadMore: null,
                 deleteModalOpen: false,
                 lens: false,
                 page: 1,
@@ -182,24 +188,29 @@
                 resources: [],
                 selectedResources: [],
                 selectAllMatchingResources: false,
-                perPage: this.initialPerPage,
+                perPage: 25,
                 softDeletes: false,
                 sortable: true,
                 collapsed: false,
                 authorizedToRelate: false,
                 orderBy: '',
-                orderByDirection: null,
+                orderByDirection: '',
                 trashed: '',
                 search: '',
                 filterHasLoaded: false,
-                filterIsActive: false
+                filterIsActive: false,
+                watchersEnabled: false
             };
         },
 
         watch: {
             expandableOpened(value) {
+                if (!value) {
+                    this.disableWatchers();
+                    this.stopPolling();
+                    this.resetToDefaults();
+                }
                 this.collapsed = !value;
-                this.resetToDefaults();
                 this.handleCollapsableChange();
             }
         },
@@ -207,30 +218,15 @@
         /**
          * Mount the component and retrieve its initial data.
          */
-        async created() {
+        created() {
             Nova.$on('refresh-resources', this.getResources);
             this.collapsed = !this.expandableOpened;
-            this.$watch(
-                () => {
-                    return (
-                        this.encodedFilters +
-                        this.currentSearch +
-                        this.currentPage +
-                        this.currentPerPage +
-                        this.currentOrderBy +
-                        this.currentOrderByDirection +
-                        this.currentTrashed
-                    );
-                },
-                () => {
-                    if (this.currentPage === 1) {
-                        this.currentPageLoadMore = null;
-                    }
-                    if (!this.collapsed) {
-                        this.getResources();
-                    }
-                }
-            );
+
+            this.registerWatchers();
+
+            if (!this.collapsed) {
+                this.initializeExpandable(true);
+            }
         },
 
         /**
@@ -245,7 +241,78 @@
         },
 
         methods: {
+            registerWatchers() {
+                this.$watch('watchHook', () => {
+                    if (this.watchersEnabled) {
+                        if (this.page === 1) {
+                            this.pageLoadMore = null;
+                        }
+
+                        this.getResources();
+                    }
+                });
+            },
+
             ...mapActions(['fetchPolicies']),
+
+            updateQueryStringIfRequired(object) {
+                if (this.expandableStoreQuery) {
+                    this.updateOnlyNecessaryQueryString(object);
+                }
+            },
+
+            updateOnlyNecessaryQueryString(object) {
+                object = Object.keys(object)
+                    .filter(key => {
+                        switch (key) {
+                            case this.pageParameter:
+                                return this.queryStringPageParameterValue != object[key];
+                            case this.filterParameter:
+                                return this.queryStringFilterParameterValue != object[key];
+                            case this.orderByParameter:
+                                return this.queryStringOrderByParameterValue != object[key];
+                            case this.orderByDirectionParameter:
+                                return this.queryStringOrderByDirectionParameterValue != object[key];
+                            case this.trashedParameter:
+                                return this.queryStringTrashedParameterValue != object[key];
+                            case this.searchParameter:
+                                return this.queryStringSearchParameterValue != object[key];
+                            case this.perPageParameter:
+                                return this.queryStringPerPageParameterValue != object[key];
+                            default:
+                                return false;
+                        }
+                    })
+                    .reduce((carry, key) => {
+                        carry[key] = object[key];
+                        return carry;
+                    }, {});
+
+                if (Object.keys(object).length) {
+                    this.updateQueryString(object);
+                }
+            },
+
+            async initializeExpandable(onCreated) {
+                if (onCreated) {
+                    this.initializeSearch();
+                    this.initializePage();
+                    this.initializeTrashed();
+                    this.initializeOrdering();
+                }
+                await this.initializeFilters(onCreated);
+                await this.getResources();
+                await this.getAuthorizationToRelate();
+                this.enableWatchers();
+            },
+
+            enableWatchers() {
+                this.watchersEnabled = true;
+            },
+
+            disableWatchers() {
+                this.watchersEnabled = false;
+            },
 
             /**
              * Get the resources based on the current page, search, filters, etc.
@@ -262,6 +329,9 @@
                 this.$nextTick(() => {
                     this.clearResourceSelections();
 
+                    if (this.canceller !== null) {
+                        this.canceller();
+                    }
                     return minimum(
                         Nova.request().get('/nova-api/' + this.resourceName, {
                             params: this.resourceRequestQueryString,
@@ -291,17 +361,28 @@
                             this.resourceResponseError = e;
 
                             throw e;
+                        })
+                        .finally(() => {
+                            this.updateQueryStringIfRequired({
+                                [this.pageParameter]: this.page == 1 ? '' : this.page,
+                                [this.filterParameter]: this.encodedFilters,
+                                [this.orderByParameter]: this.orderBy,
+                                [this.orderByDirectionParameter]: this.orderByDirection,
+                                [this.trashedParameter]: this.trashed,
+                                [this.searchParameter]: this.search,
+                                [this.perPageParameter]: this.perPage == (this.initialPerPage || 25) ? '' : this.perPage
+                            });
                         });
                 });
             },
 
             handleResourcesLoaded() {
-                this.loading = false
-                
+                this.loading = false;
+
                 if (this.resourceResponse.total !== null) {
-                    this.allMatchingResourceCount = this.resourceResponse.total
+                    this.allMatchingResourceCount = this.resourceResponse.total;
                 } else {
-                    this.getAllMatchingResourceCount()
+                    this.getAllMatchingResourceCount();
                 }
 
                 Nova.$emit('resources-loaded', {
@@ -365,17 +446,17 @@
              * Load more resources.
              */
             loadMore() {
-                if (this.currentPageLoadMore === null) {
-                    this.currentPageLoadMore = this.currentPage;
+                if (this.pageLoadMore === null) {
+                    this.pageLoadMore = this.page;
                 }
 
-                this.currentPageLoadMore = this.currentPageLoadMore + 1;
+                this.pageLoadMore = this.pageLoadMore + 1;
 
                 return minimum(
                     Nova.request().get('/nova-api/' + this.resourceName, {
                         params: {
                             ...this.resourceRequestQueryString,
-                            page: this.currentPageLoadMore // We do this to override whatever page number is in the URL
+                            page: this.pageLoadMore // We do this to override whatever page number is in the URL
                         }
                     }),
                     300
@@ -400,14 +481,7 @@
                 this.loading = true;
 
                 if (!this.collapsed) {
-                    Nova.$emit('expandable-row-opened', this.expandableResourceId, this.expandableFieldId);
-
-                    if (!this.filterHasLoaded) {
-                        await this.initializeFilters(null);
-                    }
-                    await this.getResources();
-
-                    await this.getAuthorizationToRelate();
+                    await this.initializeExpandable();
                     this.restartPolling();
                 } else {
                     this.loading = false;
@@ -415,17 +489,17 @@
             },
 
             /*
-            * Update the resource selection status
-            */
+             * Update the resource selection status
+             */
             updateSelectionStatus(resource) {
                 if (!_.includes(this.selectedResources, resource)) {
-                    this.selectedResources.push(resource)
+                    this.selectedResources.push(resource);
                 } else {
-                    const index = this.selectedResources.indexOf(resource)
-                    if (index > -1) this.selectedResources.splice(index, 1)
+                    const index = this.selectedResources.indexOf(resource);
+                    if (index > -1) this.selectedResources.splice(index, 1);
                 }
 
-                this.selectAllMatchingResources = false
+                this.selectAllMatchingResources = false;
             },
 
             /**
@@ -446,7 +520,7 @@
              * Reset the order by to its default state
              */
             resetOrderBy(field) {
-                this.orderByDirection = null;
+                this.orderByDirection = '';
                 this.orderBy = field.sortableUriKey;
             },
 
@@ -461,13 +535,17 @@
              * Clear filters and reset the resource table
              */
             async clearSelectedFilters() {
-                await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
-                    resourceName: this.resourceName
-                });
+                await this.clearFiltersStore();
 
                 this.page = 1;
 
                 Nova.$emit('filter-reset');
+            },
+
+            async clearFiltersStore() {
+                await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
+                    resourceName: this.resourceName
+                });
             },
 
             /**
@@ -483,9 +561,39 @@
             },
 
             /**
+             * Sync the current search value from the query string.
+             */
+            initializeSearch() {
+                this.search = this.queryStringSearchParameterValue;
+            },
+
+            /**
+             * Sync the per page values from the query string.
+             */
+            initializePage() {
+                this.page = Number(this.queryStringPageParameterValue || 1);
+                this.perPage = Number(this.queryStringPerPageParameterValue || this.initialPerPage || 25);
+            },
+
+            /**
+             * Sync the trashed state values from the query string.
+             */
+            initializeTrashed() {
+                this.trashed = this.queryStringTrashedParameterValue;
+            },
+
+            /**
+             * Sync the current order by values from the query string.
+             */
+            initializeOrdering() {
+                this.orderBy = this.queryStringOrderByParameterValue;
+                this.orderByDirection = this.queryStringOrderByDirectionParameterValue;
+            },
+
+            /**
              * Set up filters for the current view
              */
-            async initializeFilters() {
+            async initializeFilters(onCreated) {
                 if (this.filterHasLoaded === true) {
                     return;
                 }
@@ -507,7 +615,7 @@
                     )
                 );
 
-                await this.initializeState();
+                await this.initializeState(onCreated);
 
                 this.filterHasLoaded = true;
             },
@@ -515,10 +623,15 @@
             /**
              * Initialize the filter state
              */
-            async initializeState() {
-                await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
-                    resourceName: this.resourceName
-                });
+            async initializeState(onCreated) {
+                (onCreated || this.expandableStoreQuery) && this.queryStringFilterParameterValue
+                    ? await this.$store.dispatch(
+                          `${this.resourceName}/initializeCurrentFilterValuesFromQueryString`,
+                          this.queryStringFilterParameterValue
+                      )
+                    : await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
+                          resourceName: this.resourceName
+                      });
             },
 
             /**
@@ -585,15 +698,39 @@
             },
 
             resetToDefaults() {
-                if (this.filterHasLoaded) {
-                    this.clearSelectedFilters();
-                }
+                this.filterHasLoaded = false;
+                this.clearFiltersStore();
                 this.search = '';
                 this.page = 1;
-                this.perPage = this.initialPerPage;
+                this.perPage = 25;
                 this.orderBy = '';
-                this.orderByDirection = null;
+                this.orderByDirection = '';
                 this.trashed = '';
+
+                // always reset filters also on query string if necessary
+                this.updateOnlyNecessaryQueryString({
+                    [this.pageParameter]: '',
+                    [this.filterParameter]: '',
+                    [this.orderByParameter]: '',
+                    [this.orderByDirectionParameter]: '',
+                    [this.trashedParameter]: '',
+                    [this.searchParameter]: '',
+                    [this.perPageParameter]: ''
+                });
+            },
+
+            performLazySearch(search) {
+                const debouncer = _.debounce(callback => callback(), this.resourceInformation.debounce);
+                debouncer(() => {
+                    this.performSearch(search);
+                });
+            },
+
+            /**
+             * Execute a search against the resource.
+             */
+            performSearch(search) {
+                this.search = search;
             }
         },
 
@@ -610,18 +747,32 @@
              */
             resourceRequestQueryString() {
                 return {
-                    search: this.currentSearch,
+                    search: this.search,
                     filters: this.encodedFilters,
-                    orderBy: this.currentOrderBy,
-                    orderByDirection: this.currentOrderByDirection,
-                    perPage: this.currentPerPage,
-                    trashed: this.currentTrashed,
-                    page: this.currentPage,
+                    orderBy: this.orderBy,
+                    orderByDirection: this.orderByDirection,
+                    perPage: this.perPage,
+                    trashed: this.trashed,
+                    page: this.page,
                     viaResource: this.viaResource,
                     viaResourceId: this.viaResourceId,
                     viaRelationship: this.viaRelationship,
                     viaResourceRelationship: this.viaResourceRelationship,
                     relationshipType: this.relationshipType
+                };
+            },
+
+            /**
+             * Get the query string for a deletable resource request.
+             */
+            deletableQueryString() {
+                return {
+                    search: this.search,
+                    filters: this.encodedFilters,
+                    trashed: this.trashed,
+                    viaResource: this.viaResource,
+                    viaResourceId: this.viaResourceId,
+                    viaRelationship: this.viaRelationship
                 };
             },
 
@@ -773,7 +924,7 @@
              * Return the resource count label
              */
             resourceCountLabel() {
-                const first = this.perPage * (this.currentPage - 1);
+                const first = this.perPage * (this.page - 1);
 
                 return (
                     this.resources.length &&
@@ -786,57 +937,15 @@
             /**
              * Return the current count of all resources
              */
-            currentResourceCount() {
+            resourceCount() {
                 return this.resources.length;
-            },
-
-            /**
-             * Get the current trashed constraint value from the query string.
-             */
-            currentTrashed() {
-                return this.trashed;
-            },
-
-            /**
-             * Get the current order by value from the query string.
-             */
-            currentOrderBy() {
-                return this.orderBy;
-            },
-
-            /**
-             * Get the current order by direction from the query string.
-             */
-            currentOrderByDirection() {
-                return this.orderByDirection;
-            },
-
-            /**
-             * Get the current page from the query string.
-             */
-            currentPage() {
-                return this.page;
-            },
-
-            /**
-             * Get the current per page value from the query string.
-             */
-            currentPerPage() {
-                return this.perPage;
             },
 
             /**
              * Return the total pages for the resource.
              */
             totalPages() {
-                return Math.ceil(this.allMatchingResourceCount / this.currentPerPage);
-            },
-
-            /**
-             * Get the current search value from the query string.
-             */
-            currentSearch() {
-                return this.search;
+                return Math.ceil(this.allMatchingResourceCount / this.perPage);
             },
 
             /**
@@ -931,7 +1040,7 @@
             },
 
             showSearch() {
-                return this.filterHasLoaded && this.resourceInformation && this.resourceInformation.searchable;
+                return this.resourceInformation && this.resourceInformation.searchable;
             },
 
             /**
@@ -939,6 +1048,95 @@
              */
             viaManyToMany() {
                 return this.relationshipType == 'belongsToMany' || this.relationshipType == 'morphToMany';
+            },
+
+            watchHook() {
+                return (
+                    this.encodedFilters +
+                    this.search +
+                    this.page +
+                    this.perPage +
+                    this.orderBy +
+                    this.orderByDirection +
+                    this.trashed
+                );
+            },
+
+            /**
+             * Get the name of the page query string variable.
+             */
+            pageParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_page' : this.resourceName + '_page';
+            },
+
+            /**
+             * Get the name of the filter query string variable.
+             */
+            filterParameter() {
+                return this.resourceName + '_filter';
+            },
+
+            /**
+             * Get the name of the order by query string variable.
+             */
+            orderByParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_order' : this.resourceName + '_order';
+            },
+
+            /**
+             * Get the name of the order by direction query string variable.
+             */
+            orderByDirectionParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_direction' : this.resourceName + '_direction';
+            },
+
+            /**
+             * Get the name of the trashed constraint query string variable.
+             */
+            trashedParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_trashed' : this.resourceName + '_trashed';
+            },
+
+            /**
+             * Get the name of the search query string variable.
+             */
+            searchParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_search' : this.resourceName + '_search';
+            },
+
+            /**
+             * Get the name of the per page query string variable.
+             */
+            perPageParameter() {
+                return this.viaRelationship ? this.viaRelationship + '_per_page' : this.resourceName + '_per_page';
+            },
+
+            queryStringPageParameterValue() {
+                return this.route.params[this.pageParameter] || '';
+            },
+
+            queryStringFilterParameterValue() {
+                return this.route.params[this.filterParameter] || '';
+            },
+
+            queryStringOrderByParameterValue() {
+                return this.route.params[this.orderByParameter] || '';
+            },
+
+            queryStringOrderByDirectionParameterValue() {
+                return this.route.params[this.orderByDirectionParameter] || '';
+            },
+
+            queryStringTrashedParameterValue() {
+                return this.route.params[this.trashedParameter] || '';
+            },
+
+            queryStringSearchParameterValue() {
+                return this.route.params[this.searchParameter] || '';
+            },
+
+            queryStringPerPageParameterValue() {
+                return this.route.params[this.perPageParameter] || '';
             }
         }
     };

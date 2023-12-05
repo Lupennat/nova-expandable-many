@@ -21,7 +21,7 @@
             <IndexSearchInput
                 v-if="showSearch"
                 :searchable="showSearch"
-                v-model:keyword="search"
+                v-model:keyword="componentSearch"
                 @update:keyword="updateSearch"
             />
 
@@ -128,19 +128,20 @@
             'viaHasOne',
             'viaManyToMany',
             'viaResource',
-            'showSearch'
+            'showSearch',
+            'search'
         ],
 
         data() {
             return {
-                search: ''
+                componentSearch: this.search
             };
         },
 
         methods: {
             updateSearch(search) {
-                this.search = search;
-                this.$emit('searched', this.search);
+                this.componentSearch = search;
+                this.$emit('searched', this.componentSearch);
             }
         },
 

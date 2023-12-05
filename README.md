@@ -45,13 +45,32 @@ class User extends Resource
     public function fields(Request $request)
     {
         return [
-            HasMany::make('User Post', 'posts', Post::class)->expandable('Show Label', 'Hide Label');
+            HasMany::make('User Post', 'posts', Post::class)->expandable();
         ];
     }
 }
 ```
 
-> By Default expandable use `Show` and `Hide` as labels.
+By Default expandable use `Show` and `Hide` as labels, you can change labels using meta
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)->expandable()
+    ->withMeta([
+        'expandableShowLabel' => 'Custom Show',
+        'expandableHideLabel' => 'Custom Hide',
+    ]);
+```
+
+By Default expandable do not store on browser history any status, you can change it using meta
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)->expandable()
+    ->withMeta([
+        // 'expandableStoreStatus' => 'full', // will store status also for relationships
+        'expandableStoreStatus' => 'accordion', // will store status only for accordion
+        'expandableStoreStatus' => '', // will not store any status
+    ]);
+```
 
 ## Credits
 

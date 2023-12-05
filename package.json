@@ -22,7 +22,6 @@
     "dependencies": {
         "@inertiajs/inertia": "^0.11.0",
         "inflector-js": "^1.0.1",
-        "uid": "^2.0.0",
         "vuex": "^4.0.2"
     }
 }
