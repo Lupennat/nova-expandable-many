@@ -37,7 +37,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
                 $this->withMeta(['expandableShowLabel' => 'Show']);
             }
 
-            if (!array_key_exists('expandableShowLabel', $this->meta)) {
+            if (!array_key_exists('expandableHideLabel', $this->meta)) {
                 $this->withMeta(['expandableHideLabel' => 'Hide']);
             }
 

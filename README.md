@@ -74,6 +74,29 @@ By Default expandable do not store on browser history any status, you can change
     ]);
 ```
 
+### Lens
+
+If you want to use Expandable Many inside a Lens, you need to register also the trait `HasExpandableManyLens` inside your Lens.
+
+```php
+
+use Laravel\Nova\Fields\HasMany;
+use Laravel\Nova\Http\Requests\NovaRequest;
+use Laravel\Nova\Lenses\Lens;
+
+class UserLens extends Lens
+{
+   use Lupennat\ExpandableMany\HasExpandableManyLens;
+
+    public function fields(Request $request)
+    {
+        return [
+            HasMany::make('User Post', 'posts', Post::class)->expandable();
+        ];
+    }
+}
+```
+
 ## Credits
 
 This package is based on the original idea from [Nova Expandable Row](https://github.com/SPRIGS/nova-expandable-row)
