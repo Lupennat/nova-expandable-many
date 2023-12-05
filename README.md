@@ -1,3 +1,5 @@
+![](https://github.com/Lupennat/nova-expandable-many/blob/main/demo.gif)
+
 1. [Requirements](#Requirements)
 2. [Installation](#Installation)
 3. [Usage](#Usage)
