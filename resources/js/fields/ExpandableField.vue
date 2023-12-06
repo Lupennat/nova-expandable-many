@@ -1,6 +1,9 @@
 <template>
     <div>
-        <span class="flex items-center" @click.stop="expandableToogle">
+        <span v-if="field.expandableSkip">
+            {{ __(field.expandableSkipLabel) }}
+        </span>
+        <span class="flex items-center" @click.stop="expandableToogle" v-else>
             <span>{{ expandableOpened ? __(field.expandableHideLabel) : __(field.expandableShowLabel) }}</span>
             <button
                 class="rounded border border-transparent h-6 w-6 ml-1 inline-flex items-center justify-center focus:outline-none focus:ring ring-primary-200"
@@ -9,17 +12,17 @@
             >
                 <CollapseButton :collapsed="!expandableOpened" />
             </button>
+            <Teleport :to="expandableRow" v-if="isMounted">
+                <td :colspan="columnCount">
+                    <div class="py-4 px-2">
+                        <slot
+                            :expandable-opened="expandableOpened"
+                            :expandable-store-query="shouldStoreQueryStringRelations"
+                        ></slot>
+                    </div>
+                </td>
+            </Teleport>
         </span>
-        <Teleport :to="expandableRow" v-if="isMounted">
-            <td :colspan="columnCount">
-                <div class="py-4 px-2">
-                    <slot
-                        :expandable-opened="expandableOpened"
-                        :expandable-store-query="shouldStoreQueryStringRelations"
-                    ></slot>
-                </div>
-            </td>
-        </Teleport>
     </div>
 </template>
 
@@ -39,7 +42,7 @@
                 columnCount: 1,
                 isMounted: false,
                 openedField: '',
-                openedId: ''
+                openedId: '',
             };
         },
         watch: {},
@@ -101,7 +104,7 @@
                 return `${this.resourceName}_expid`;
             },
             expandableOpened() {
-                return this.openedField == this.field.resourceName && this.openedId == this.resource.id.value;
+                return !this.field.expandableSkip && this.openedField == this.field.resourceName && this.openedId == this.resource.id.value;
             },
             currentOpenedId() {
                 return this.route.params[this.expandableIdParameter] || '';

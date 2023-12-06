@@ -2,8 +2,11 @@
 
 namespace Lupennat\ExpandableMany;
 
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\Pivot;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Nova\Contracts\ListableField;
+use Laravel\Nova\Contracts\Resolvable;
 use Laravel\Nova\Events\ServingNova;
 use Laravel\Nova\Fields\BelongsToMany;
 use Laravel\Nova\Fields\Field;
@@ -28,11 +31,28 @@ class ExpandableManyServiceProvider extends ServiceProvider
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
             return $this->reject(function ($field) {
-                return $field instanceof ListableField && (!property_exists($field, 'expandableHook') || !$field->expandableHook);
+                return $field instanceof ListableField && !(property_exists($field, 'expandableHook') && $field->expandableHook);
             });
         });
 
-        Field::macro('expandable', function () {
+        FieldCollection::macro('resolveForDisplayWithExpandable', function ($resource) {
+            return $this->each(function ($field) use ($resource) {
+                if (($field instanceof ListableField && !(property_exists($field, 'expandableHook') && $field->expandableHook)) || !$field instanceof Resolvable) {
+                    return;
+                }
+
+                if ($field->pivot) {
+                    $field->resolveForDisplay($resource->{$field->pivotAccessor} ?? new Pivot());
+                } else {
+                    $field->resolveForDisplay($resource);
+                }
+            });
+        });
+
+        Field::macro('expandable', function (callable $displayCallback = null) {
+            // prevent loading relation when resolveForDisplay is called
+            $this->value = new Collection([]);
+
             if (!array_key_exists('expandableShowLabel', $this->meta)) {
                 $this->withMeta(['expandableShowLabel' => 'Show']);
             }
@@ -45,9 +65,24 @@ class ExpandableManyServiceProvider extends ServiceProvider
                 $this->withMeta(['expandableStoreStatus' => '']);
             }
 
+            if (!array_key_exists('expandableSkip', $this->meta)) {
+                $this->withMeta(['expandableSkip' => false]);
+            }
+
+            if (!array_key_exists('expandableSkipLabel', $this->meta)) {
+                $this->withMeta(['expandableSkipLabel' => '—']);
+            }
+            
+            if (is_callable($displayCallback)) {
+                $this->displayUsing(function ($value, $resource) use ($displayCallback) {
+                    call_user_func($displayCallback, $this, $resource);
+
+                    return null;
+                });
+            }
+
             if ($this instanceof BelongsToMany) {
                 $this->expandableHook = true;
-
                 $this->component = 'belongs-to-many-expandable-field';
 
                 return $this;

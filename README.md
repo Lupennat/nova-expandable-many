@@ -57,22 +57,49 @@ By Default expandable use `Show` and `Hide` as labels, you can change labels usi
 
 ```php
     HasMany::make('User Post', 'posts', Post::class)->expandable()
-    ->withMeta([
-        'expandableShowLabel' => 'Custom Show',
-        'expandableHideLabel' => 'Custom Hide',
-    ]);
+        ->withMeta([
+            'expandableShowLabel' => 'Custom Show',
+            'expandableHideLabel' => 'Custom Hide',
+        ])
 ```
 
 By Default expandable do not store on browser history any status, you can change it using meta
 
 ```php
     HasMany::make('User Post', 'posts', Post::class)->expandable()
-    ->withMeta([
-        // 'expandableStoreStatus' => 'full', // will store status also for relationships
-        'expandableStoreStatus' => 'accordion', // will store status only for accordion
-        'expandableStoreStatus' => '', // will not store any status
-    ]);
+        ->withMeta([
+            // 'expandableStoreStatus' => 'full', // will store status also for relationships
+            'expandableStoreStatus' => 'accordion', // will store status only for accordion
+            'expandableStoreStatus' => '', // will not store any status
+        ])
 ```
+
+Expandable can be skipped and an empty field is shown (by Default is false)
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)->expandable()
+        ->withMeta([
+            'expandableSkip' => true,
+            'expandableSkipLabel' => '', // default is '—'
+        ])
+```
+
+### Display Callback
+
+Expandable Many will resolve a display callback foreach resource, you can use it to manipulate meta attributes dinamically.
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)
+        ->expandable(function(HasMany $field, $resource) {
+            $resource->loadCount('posts');
+            $field->withMeta([
+                'expandableShowLabel' => 'Show ' . $resource->posts_count,
+                'expandableSkip' => $resource->posts_count === 0
+            ]);
+        })
+```
+
+> By Default Expandable do not resolve relations, accessing a relationAttribute through the `$resource` will execute a query against database to load all related models.
 
 ### Lens
 

@@ -1,3 +1,11 @@
+## v1.1.0
+
+### New
+
+- expandable displayCallback
+- `expandableSkip` meta
+- `expandableSkipLabel` meta
+
 ## v1.0.1
 
 ### Bug Fix
