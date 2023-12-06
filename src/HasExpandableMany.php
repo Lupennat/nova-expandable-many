@@ -18,6 +18,6 @@ trait HasExpandableMany
             ->filterForIndex($request, $this->resource)
             ->withoutListableFieldsNotExpandable()
             ->authorized($request)
-            ->resolveForDisplay($this->resource);
+            ->resolveForDisplayWithExpandable($this->resource);
     }
 }
