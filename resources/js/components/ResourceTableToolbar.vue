@@ -85,6 +85,7 @@
     import { Button } from 'laravel-nova-ui'
     import DeleteMenu from './DeleteMenu';
     import IndexSearchInput from './IndexSearchInput';
+    import FilterMenu from '@/components/FilterMenu';
 
     export default {
         emits: ['start-polling', 'stop-polling', 'deselect', 'searched'],
