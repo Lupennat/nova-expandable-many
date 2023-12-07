@@ -42,6 +42,6 @@ export default {
             }
 
             originalUpdateQueryStringComponent && originalUpdateQueryStringComponent.updateQueryString(value);
-        }
-    }
+        },
+    },
 };

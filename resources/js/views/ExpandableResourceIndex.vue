@@ -130,7 +130,7 @@
             InteractsWithResourceInformation,
             SupportsPolling,
             RouteParameters,
-            InteractsWithQueryString
+            InteractsWithQueryString,
         ],
 
         components: { ResourceTable, ResourceTableToolbar },
@@ -139,24 +139,24 @@
             ...mapProps(['resourceName', 'viaResource', 'viaResourceId', 'viaRelationship', 'relationshipType']),
 
             field: {
-                type: Object
+                type: Object,
             },
             initialPerPage: {
                 type: Number,
-                default: 25
+                default: 25,
             },
             shouldOverrideMeta: {
                 type: Boolean,
-                default: false
+                default: false,
             },
             expandableOpened: {
                 type: Boolean,
-                required: true
+                required: true,
             },
             expandableStoreQuery: {
                 type: Boolean,
-                required: true
-            }
+                required: true,
+            },
         },
 
         provide() {
@@ -170,7 +170,7 @@
                 selectAllMatchingChecked: computed(() => this.selectAllMatchingChecked),
                 selectAllOrSelectAllMatchingChecked: computed(() => this.selectAllOrSelectAllMatchingChecked),
                 selectAllAndSelectAllMatchingChecked: computed(() => this.selectAllAndSelectAllMatchingChecked),
-                selectAllIndeterminate: computed(() => this.selectAllIndeterminate)
+                selectAllIndeterminate: computed(() => this.selectAllIndeterminate),
             };
         },
 
@@ -199,7 +199,7 @@
                 search: '',
                 filterHasLoaded: false,
                 filterIsActive: false,
-                watchersEnabled: false
+                watchersEnabled: false,
             };
         },
 
@@ -212,7 +212,7 @@
                 }
                 this.collapsed = !value;
                 this.handleCollapsableChange();
-            }
+            },
         },
 
         /**
@@ -337,9 +337,9 @@
                             params: this.resourceRequestQueryString,
                             cancelToken: new CancelToken(canceller => {
                                 this.canceller = canceller;
-                            })
+                            }),
                         }),
-                        300
+                        300,
                     )
                         .then(({ data }) => {
                             this.resources = [];
@@ -370,7 +370,8 @@
                                 [this.orderByDirectionParameter]: this.orderByDirection,
                                 [this.trashedParameter]: this.trashed,
                                 [this.searchParameter]: this.search,
-                                [this.perPageParameter]: this.perPage == (this.initialPerPage || 25) ? '' : this.perPage
+                                [this.perPageParameter]:
+                                    this.perPage == (this.initialPerPage || 25) ? '' : this.perPage,
                             });
                         });
                 });
@@ -387,7 +388,7 @@
 
                 Nova.$emit('resources-loaded', {
                     resourceName: this.resourceName,
-                    mode: this.isRelation ? 'related' : 'index'
+                    mode: this.isRelation ? 'related' : 'index',
                 });
 
                 this.initializePolling();
@@ -422,7 +423,7 @@
                             '&viaRelationship=' +
                             this.viaRelationship +
                             '&relationshipType=' +
-                            this.relationshipType
+                            this.relationshipType,
                     )
                     .then(response => {
                         this.authorizedToRelate = response.data.authorized;
@@ -435,7 +436,7 @@
             getAllMatchingResourceCount() {
                 Nova.request()
                     .get('/nova-api/' + this.resourceName + '/count', {
-                        params: this.resourceRequestQueryString
+                        params: this.resourceRequestQueryString,
                     })
                     .then(response => {
                         this.allMatchingResourceCount = response.data.count;
@@ -456,10 +457,10 @@
                     Nova.request().get('/nova-api/' + this.resourceName, {
                         params: {
                             ...this.resourceRequestQueryString,
-                            page: this.pageLoadMore // We do this to override whatever page number is in the URL
-                        }
+                            page: this.pageLoadMore, // We do this to override whatever page number is in the URL
+                        },
                     }),
-                    300
+                    300,
                 ).then(({ data }) => {
                     this.resourceResponse = data;
                     this.resources = [...this.resources, ...data.resources];
@@ -472,7 +473,7 @@
 
                     Nova.$emit('resources-loaded', {
                         resourceName: this.resourceName,
-                        mode: this.isRelation ? 'related' : 'index'
+                        mode: this.isRelation ? 'related' : 'index',
                     });
                 });
             },
@@ -544,7 +545,7 @@
 
             async clearFiltersStore() {
                 await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
-                    resourceName: this.resourceName
+                    resourceName: this.resourceName,
                 });
             },
 
@@ -609,10 +610,10 @@
                             viaResource: this.viaResource,
                             viaResourceId: this.viaResourceId,
                             viaRelationship: this.viaRelationship,
-                            relationshipType: this.relationshipType
+                            relationshipType: this.relationshipType,
                         },
-                        _.identity
-                    )
+                        _.identity,
+                    ),
                 );
 
                 await this.initializeState(onCreated);
@@ -627,10 +628,10 @@
                 (onCreated || this.expandableStoreQuery) && this.queryStringFilterParameterValue
                     ? await this.$store.dispatch(
                           `${this.resourceName}/initializeCurrentFilterValuesFromQueryString`,
-                          this.queryStringFilterParameterValue
+                          this.queryStringFilterParameterValue,
                       )
                     : await this.$store.dispatch(`${this.resourceName}/resetFilterState`, {
-                          resourceName: this.resourceName
+                          resourceName: this.resourceName,
                       });
             },
 
@@ -715,7 +716,7 @@
                     [this.orderByDirectionParameter]: '',
                     [this.trashedParameter]: '',
                     [this.searchParameter]: '',
-                    [this.perPageParameter]: ''
+                    [this.perPageParameter]: '',
                 });
             },
 
@@ -731,7 +732,7 @@
              */
             performSearch(search) {
                 this.search = search;
-            }
+            },
         },
 
         computed: {
@@ -758,7 +759,7 @@
                     viaResourceId: this.viaResourceId,
                     viaRelationship: this.viaRelationship,
                     viaResourceRelationship: this.viaResourceRelationship,
-                    relationshipType: this.relationshipType
+                    relationshipType: this.relationshipType,
                 };
             },
 
@@ -772,7 +773,7 @@
                     trashed: this.trashed,
                     viaResource: this.viaResource,
                     viaResourceId: this.viaResourceId,
-                    viaRelationship: this.viaRelationship
+                    viaRelationship: this.viaRelationship,
                 };
             },
 
@@ -784,7 +785,7 @@
                     this.authorizedToDeleteSelectedResources ||
                         this.authorizedToForceDeleteSelectedResources ||
                         this.authorizedToRestoreSelectedResources ||
-                        this.selectAllMatchingChecked
+                        this.selectAllMatchingChecked,
                 );
             },
 
@@ -929,7 +930,7 @@
                 return (
                     this.resources.length &&
                     `${Nova.formatNumber(first + 1)}-${Nova.formatNumber(first + this.resources.length)} ${this.__(
-                        'of'
+                        'of',
                     )} ${Nova.formatNumber(this.allMatchingResourceCount)}`
                 );
             },
@@ -1137,7 +1138,7 @@
 
             queryStringPerPageParameterValue() {
                 return this.route.params[this.perPageParameter] || '';
-            }
-        }
+            },
+        },
     };
 </script>

@@ -17,12 +17,12 @@
             'show',
             'softDeletes',
             'isOnlyTrashed',
-            'viaManyToMany'
+            'viaManyToMany',
         ],
         computed: {
             trashedOnlyMode() {
                 return this.isOnlyTrashed;
-            }
-        }
+            },
+        },
     };
 </script>

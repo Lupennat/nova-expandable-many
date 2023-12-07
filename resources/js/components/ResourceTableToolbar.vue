@@ -3,7 +3,7 @@
         class="flex flex-col md:flex-row md:items-center"
         :class="{
             'py-3 border-b border-gray-200 dark:border-gray-700':
-                shouldShowCheckBoxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters
+                shouldShowCheckBoxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters,
         }"
     >
         <div class="flex items-center flex-1">
@@ -129,12 +129,12 @@
             'viaManyToMany',
             'viaResource',
             'showSearch',
-            'search'
+            'search',
         ],
 
         data() {
             return {
-                componentSearch: this.search
+                componentSearch: this.search,
             };
         },
 
@@ -142,7 +142,7 @@
             updateSearch(search) {
                 this.componentSearch = search;
                 this.$emit('searched', this.componentSearch);
-            }
+            },
         },
 
         computed: {
@@ -150,7 +150,7 @@
                 if (this.resourceInformation) {
                     return this.perPageOptions || this.resourceInformation.perPageOptions;
                 }
-            }
-        }
+            },
+        },
     };
 </script>

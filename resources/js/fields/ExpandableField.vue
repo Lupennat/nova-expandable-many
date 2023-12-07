@@ -85,10 +85,10 @@
                 if (this.shouldStoreQueryStringAccordion) {
                     this.updateQueryString({
                         [this.expandableFieldParameter]: openedField,
-                        [this.expandableIdParameter]: openedId
+                        [this.expandableIdParameter]: openedId,
                     });
                 }
-            }
+            },
         },
         computed: {
             shouldStoreQueryStringAccordion() {
@@ -104,14 +104,18 @@
                 return `${this.resourceName}_expid`;
             },
             expandableOpened() {
-                return !this.field.expandableSkip && this.openedField == this.field.resourceName && this.openedId == this.resource.id.value;
+                return (
+                    !this.field.expandableSkip &&
+                    this.openedField == this.field.resourceName &&
+                    this.openedId == this.resource.id.value
+                );
             },
             currentOpenedId() {
                 return this.route.params[this.expandableIdParameter] || '';
             },
             currentOpenedField() {
                 return this.route.params[this.expandableFieldParameter] || '';
-            }
-        }
+            },
+        },
     };
 </script>

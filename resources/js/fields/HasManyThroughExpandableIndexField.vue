@@ -33,8 +33,8 @@
         props: {
             ...mapProps(['resourceId', 'field']),
             resourceName: {},
-            resource: {}
+            resource: {},
         },
-        components: { ExpandableField, ExpandableResourceIndex }
+        components: { ExpandableField, ExpandableResourceIndex },
     };
 </script>

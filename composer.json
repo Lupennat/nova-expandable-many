@@ -49,6 +49,7 @@
             "rm -rf composer.lock",
             "php install.php",
             "npm ci",
+            "npm run format",
             "npm run prod"
         ]
     }
