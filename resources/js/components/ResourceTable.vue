@@ -7,7 +7,7 @@
         extends: ResourceTable,
         components: {
             ResourceTableHeader,
-            ResourceTableRow
-        }
-    }
+            ResourceTableRow,
+        },
+    };
 </script>

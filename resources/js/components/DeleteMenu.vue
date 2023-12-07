@@ -3,13 +3,11 @@
 
     export default {
         extends: DeleteMenu,
-        props: [
-            'isOnlyTrashed',
-        ],
+        props: ['isOnlyTrashed'],
         computed: {
             trashedOnlyMode() {
                 return this.isOnlyTrashed;
-            }
-        }
+            },
+        },
     };
 </script>

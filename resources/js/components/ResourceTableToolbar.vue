@@ -3,7 +3,7 @@
         class="flex flex-col md:flex-row md:items-center"
         :class="{
             'py-3 border-b border-gray-200 dark:border-gray-700':
-                shouldShowCheckboxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters
+                shouldShowCheckboxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters,
         }"
     >
         <div class="flex items-center flex-1">
@@ -35,7 +35,6 @@
                     variant="link"
                     :state="currentlyPolling ? 'default' : 'mellow'"
                 />
-
 
                 <!-- Filters -->
                 <FilterMenu
@@ -87,7 +86,7 @@
 </template>
 
 <script>
-    import { Button } from 'laravel-nova-ui'
+    import { Button } from 'laravel-nova-ui';
     import DeleteMenu from './DeleteMenu';
     import IndexSearchInput from './IndexSearchInput';
 
@@ -137,12 +136,12 @@
             'viaManyToMany',
             'viaResource',
             'showSearch',
-            'search'
+            'search',
         ],
 
         data() {
             return {
-                componentSearch: this.search
+                componentSearch: this.search,
             };
         },
 
@@ -150,7 +149,7 @@
             updateSearch(search) {
                 this.componentSearch = search;
                 this.$emit('searched', this.componentSearch);
-            }
+            },
         },
 
         computed: {
@@ -158,28 +157,28 @@
              * Return the filters from state
              */
             filters() {
-                return this.$store.getters[`${this.resourceName}/filters`]
+                return this.$store.getters[`${this.resourceName}/filters`];
             },
 
             /**
              * Determine via state whether filters are applied
              */
             filtersAreApplied() {
-                return this.$store.getters[`${this.resourceName}/filtersAreApplied`]
+                return this.$store.getters[`${this.resourceName}/filtersAreApplied`];
             },
 
             /**
              * Return the number of active filters
              */
             activeFilterCount() {
-                return this.$store.getters[`${this.resourceName}/activeFilterCount`]
+                return this.$store.getters[`${this.resourceName}/activeFilterCount`];
             },
 
             filterPerPageOptions() {
                 if (this.resourceInformation) {
                     return this.perPageOptions || this.resourceInformation.perPageOptions;
                 }
-            }
-        }
+            },
+        },
     };
 </script>

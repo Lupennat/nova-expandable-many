@@ -19,6 +19,6 @@
     import IndexSearchInput from '@/components/Inputs/IndexSearchInput';
 
     export default {
-        extends: IndexSearchInput
+        extends: IndexSearchInput,
     };
 </script>
