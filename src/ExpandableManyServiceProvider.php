@@ -72,7 +72,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
             if (!array_key_exists('expandableSkipLabel', $this->meta)) {
                 $this->withMeta(['expandableSkipLabel' => '—']);
             }
-            
+
             if (is_callable($displayCallback)) {
                 $this->displayUsing(function ($value, $resource) use ($displayCallback) {
                     call_user_func($displayCallback, $this, $resource);

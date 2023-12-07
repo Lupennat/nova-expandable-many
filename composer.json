@@ -43,6 +43,13 @@
     }
     ],
     "scripts": {
-        "php-cs-fixer": "vendor/bin/php-cs-fixer fix"
+        "php-cs-fixer": "vendor/bin/php-cs-fixer fix",
+        "build": [
+            "composer php-cs-fixer src",
+            "rm -rf composer.lock",
+            "php install.php",
+            "npm install",
+            "npm run prod"
+        ]
     }
 }
