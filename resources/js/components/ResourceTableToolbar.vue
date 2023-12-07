@@ -36,18 +36,23 @@
                     :state="currentlyPolling ? 'default' : 'mellow'"
                 />
 
+
                 <!-- Filters -->
                 <FilterMenu
+                    v-if="filters.length > 0 || softDeletes || !viaResource"
+                    :active-filter-count="activeFilterCount"
+                    :filters-are-applied="filtersAreApplied"
+                    :filters="filters"
+                    :per-page-options="filterPerPageOptions"
+                    :per-page="perPage"
                     :resource-name="resourceName"
                     :soft-deletes="softDeletes"
-                    :via-resource="viaResource"
                     :trashed="trashed"
-                    :per-page="perPage"
-                    :per-page-options="filterPerPageOptions"
+                    :via-resource="viaResource"
                     @clear-selected-filters="clearSelectedFilters"
                     @filter-changed="filterChanged"
-                    @trashed-changed="trashedChanged"
                     @per-page-changed="updatePerPageChanged"
+                    @trashed-changed="trashedChanged"
                 />
 
                 <DeleteMenu
@@ -85,12 +90,11 @@
     import { Button } from 'laravel-nova-ui'
     import DeleteMenu from './DeleteMenu';
     import IndexSearchInput from './IndexSearchInput';
-    import FilterMenu from '@/components/FilterMenu';
 
     export default {
         emits: ['start-polling', 'stop-polling', 'deselect', 'searched'],
 
-        components: { Button, DeleteMenu, IndexSearchInput, FilterMenu },
+        components: { Button, DeleteMenu, IndexSearchInput },
 
         props: [
             'allMatchingResourceCount',
@@ -150,6 +154,27 @@
         },
 
         computed: {
+            /**
+             * Return the filters from state
+             */
+            filters() {
+                return this.$store.getters[`${this.resourceName}/filters`]
+            },
+
+            /**
+             * Determine via state whether filters are applied
+             */
+            filtersAreApplied() {
+                return this.$store.getters[`${this.resourceName}/filtersAreApplied`]
+            },
+
+            /**
+             * Return the number of active filters
+             */
+            activeFilterCount() {
+                return this.$store.getters[`${this.resourceName}/activeFilterCount`]
+            },
+
             filterPerPageOptions() {
                 if (this.resourceInformation) {
                     return this.perPageOptions || this.resourceInformation.perPageOptions;

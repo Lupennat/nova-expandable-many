@@ -26,7 +26,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('expandable-many-2.1', __DIR__ . '/../dist/js/expandable-many.js');
+            Nova::script('expandable-many-3', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
@@ -72,7 +72,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
             if (!array_key_exists('expandableSkipLabel', $this->meta)) {
                 $this->withMeta(['expandableSkipLabel' => '—']);
             }
-            
+
             if (is_callable($displayCallback)) {
                 $this->displayUsing(function ($value, $resource) use ($displayCallback) {
                     call_user_func($displayCallback, $this, $resource);
