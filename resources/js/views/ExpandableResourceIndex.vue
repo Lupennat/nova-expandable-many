@@ -112,8 +112,7 @@
 </template>
 <script>
     import { CancelToken, isCancel } from 'axios';
-    import { Deletable, InteractsWithResourceInformation, SupportsPolling, mapProps, RouteParameters } from '@/mixins';
-    import InteractsWithQueryString from '../mixins/InteractsWithQueryString';
+    import { Deletable, InteractsWithResourceInformation, SupportsPolling, mapProps, InteractsWithQueryString } from '@/mixins';
     import ResourceTable from '../components/ResourceTable';
     import ResourceTableToolbar from '../components/ResourceTableToolbar';
 
@@ -1112,31 +1111,31 @@
             },
 
             queryStringPageParameterValue() {
-                return this.route.params[this.pageParameter] || '';
+                return this.queryStringParams[this.pageParameter] || '';
             },
 
             queryStringFilterParameterValue() {
-                return this.route.params[this.filterParameter] || '';
+                return this.queryStringParams[this.filterParameter] || '';
             },
 
             queryStringOrderByParameterValue() {
-                return this.route.params[this.orderByParameter] || '';
+                return this.queryStringParams[this.orderByParameter] || '';
             },
 
             queryStringOrderByDirectionParameterValue() {
-                return this.route.params[this.orderByDirectionParameter] || '';
+                return this.queryStringParams[this.orderByDirectionParameter] || '';
             },
 
             queryStringTrashedParameterValue() {
-                return this.route.params[this.trashedParameter] || '';
+                return this.queryStringParams[this.trashedParameter] || '';
             },
 
             queryStringSearchParameterValue() {
-                return this.route.params[this.searchParameter] || '';
+                return this.queryStringParams[this.searchParameter] || '';
             },
 
             queryStringPerPageParameterValue() {
-                return this.route.params[this.perPageParameter] || '';
+                return this.queryStringParams[this.perPageParameter] || '';
             }
         }
     };

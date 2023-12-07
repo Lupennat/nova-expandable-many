@@ -27,8 +27,7 @@
 </template>
 
 <script>
-    import { RouteParameters } from '@/mixins';
-    import InteractsWithQueryString from '../mixins/InteractsWithQueryString';
+    import { InteractsWithQueryString } from '@/mixins';
 
     export default {
         props: ['field', 'resource', 'resourceName'],
@@ -107,10 +106,10 @@
                 return !this.field.expandableSkip && this.openedField == this.field.resourceName && this.openedId == this.resource.id.value;
             },
             currentOpenedId() {
-                return this.route.params[this.expandableIdParameter] || '';
+                return this.queryStringParams[this.expandableIdParameter] || '';
             },
             currentOpenedField() {
-                return this.route.params[this.expandableFieldParameter] || '';
+                return this.queryStringParams[this.expandableFieldParameter] || '';
             }
         }
     };

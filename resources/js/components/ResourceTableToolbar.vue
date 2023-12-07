@@ -3,13 +3,13 @@
         class="flex flex-col md:flex-row md:items-center"
         :class="{
             'py-3 border-b border-gray-200 dark:border-gray-700':
-                shouldShowCheckBoxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters
+                shouldShowCheckboxes || shouldShowDeleteMenu || softDeletes || !viaResource || hasFilters
         }"
     >
         <div class="flex items-center flex-1">
             <div class="md:ml-3">
                 <SelectAllDropdown
-                    v-if="shouldShowCheckBoxes"
+                    v-if="shouldShowCheckboxes"
                     :all-matching-resource-count="allMatchingResourceCount"
                     :current-page-count="currentPageCount"
                     @toggle-select-all="toggleSelectAll"
@@ -116,7 +116,7 @@
             'restoreSelectedResources',
             'selectAllMatchingChecked',
             'selectedResources',
-            'shouldShowCheckBoxes',
+            'shouldShowCheckboxes',
             'shouldShowDeleteMenu',
             'shouldShowPollingToggle',
             'softDeletes',
