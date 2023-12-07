@@ -26,7 +26,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('expandable-many', __DIR__ . '/../dist/js/expandable-many.js');
+            Nova::script('expandable-many-2.1', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {

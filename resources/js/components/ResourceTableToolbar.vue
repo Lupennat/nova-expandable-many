@@ -90,7 +90,7 @@
     export default {
         emits: ['start-polling', 'stop-polling', 'deselect', 'searched'],
 
-        components: { Button, DeleteMenu, IndexSearchInput },
+        components: { Button, DeleteMenu, IndexSearchInput, FilterMenu },
 
         props: [
             'allMatchingResourceCount',
