@@ -48,7 +48,8 @@
             "composer php-cs-fixer src",
             "rm -rf composer.lock",
             "php install.php",
-            "npm install",
+            "npm ci",
+            "npm run format",
             "npm run prod"
         ]
     }
