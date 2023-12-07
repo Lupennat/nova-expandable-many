@@ -32,7 +32,7 @@
     export default {
         props: ['field', 'resource', 'resourceName'],
 
-        mixins: [RouteParameters, InteractsWithQueryString],
+        mixins: [ InteractsWithQueryString],
 
         data() {
             return {

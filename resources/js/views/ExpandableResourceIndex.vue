@@ -128,7 +128,6 @@
             Deletable,
             InteractsWithResourceInformation,
             SupportsPolling,
-            RouteParameters,
             InteractsWithQueryString
         ],
 
