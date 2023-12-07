@@ -656,7 +656,9 @@
              * Toggle the selection of all matching resources in the database
              */
             toggleSelectAllMatching(e) {
-                e.preventDefault();
+                if (e) {
+                    e.preventDefault();
+                }
 
                 if (!this.selectAllMatchingResources) {
                     this.selectAllResources();
@@ -670,7 +672,9 @@
              * Toggle the selection of all resources
              */
             toggleSelectAll(e) {
-                e.preventDefault();
+                if (e) {
+                    e.preventDefault();
+                }
 
                 if (this.selectAllChecked) {
                     this.clearResourceSelections();
