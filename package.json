@@ -11,9 +11,9 @@
         "nova:install": "npm --prefix='../../vendor/laravel/nova' ci"
     },
     "devDependencies": {
-        "axios": "^1.6.0",
         "@vue/babel-plugin-jsx": "^1.1.0",
         "@vue/compiler-sfc": "^3.2.22",
+        "axios": "^1.6.0",
         "form-backend-validation": "^2.3.3",
         "laravel-mix": "^6.0.41",
         "lodash": "^4.17.21",
