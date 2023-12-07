@@ -28,11 +28,12 @@
             <!-- Toolbar Items -->
             <div class="h-9 ml-auto flex items-center pr-2 md:pr-3">
                 <!-- Resource Polling -->
-                <ResourcePollingButton
+                <Button
+                    @click="togglePolling"
                     v-if="shouldShowPollingToggle"
-                    :currently-polling="currentlyPolling"
-                    @start-polling="$emit('start-polling')"
-                    @stop-polling="$emit('stop-polling')"
+                    icon="clock"
+                    variant="link"
+                    :state="currentlyPolling ? 'default' : 'mellow'"
                 />
 
                 <!-- Filters -->
@@ -40,7 +41,6 @@
                     :resource-name="resourceName"
                     :soft-deletes="softDeletes"
                     :via-resource="viaResource"
-                    :via-has-one="viaHasOne"
                     :trashed="trashed"
                     :per-page="perPage"
                     :per-page-options="filterPerPageOptions"
@@ -73,6 +73,7 @@
                     @restoreSelected="restoreSelectedResources"
                     @restoreAllMatching="restoreAllMatchingResources"
                     @close="closeDeleteModal"
+                    :trashed-parameter="trashedParameter"
                     :is-only-trashed="trashed == 'only'"
                 />
             </div>
@@ -81,13 +82,14 @@
 </template>
 
 <script>
+    import { Button } from 'laravel-nova-ui'
     import DeleteMenu from './DeleteMenu';
     import IndexSearchInput from './IndexSearchInput';
 
     export default {
         emits: ['start-polling', 'stop-polling', 'deselect', 'searched'],
 
-        components: { DeleteMenu, IndexSearchInput },
+        components: { Button, DeleteMenu, IndexSearchInput },
 
         props: [
             'allMatchingResourceCount',
@@ -122,10 +124,11 @@
             'softDeletes',
             'toggleSelectAll',
             'toggleSelectAllMatching',
+            'togglePolling',
             'trashed',
             'trashedChanged',
+            'trashedParameter',
             'updatePerPageChanged',
-            'viaHasOne',
             'viaManyToMany',
             'viaResource',
             'showSearch',

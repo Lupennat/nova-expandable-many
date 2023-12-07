@@ -1,7 +1,6 @@
 <template>
     <Card v-if="!shouldBeCollapsed">
         <ResourceTableToolbar
-            v-if="filterHasLoaded"
             :all-matching-resource-count="allMatchingResourceCount"
             :authorized-to-delete-any-resources="authorizedToDeleteAnyResources"
             :authorized-to-delete-selected-resources="authorizedToDeleteSelectedResources"
@@ -19,6 +18,7 @@
             :force-delete-all-matching-resources="forceDeleteAllMatchingResources"
             :force-delete-selected-resources="forceDeleteSelectedResources"
             :has-filters="hasFilters"
+            :loading="resourceResponse && loading"
             :per-page="perPage"
             :per-page-options="perPageOptions"
             :resources="resources"
@@ -29,7 +29,7 @@
             :select-all-matching-checked="selectAllMatchingResources"
             @deselect="clearResourceSelections"
             :selected-resources="selectedResources"
-            :should-show-check-boxes="shouldShowCheckBoxes"
+            :should-show-checkboxes="shouldShowCheckboxes"
             :should-show-delete-menu="shouldShowDeleteMenu"
             :should-show-polling-toggle="shouldShowPollingToggle"
             :soft-deletes="softDeletes"
@@ -37,10 +37,11 @@
             @stop-polling="stopPolling"
             :toggle-select-all="toggleSelectAll"
             :toggle-select-all-matching="toggleSelectAllMatching"
+            :toggle-polling="togglePolling"
             :trashed="trashed"
             :trashed-changed="trashedChanged"
+            :trashed-parameter="trashedParameter"
             :update-per-page-changed="updatePerPageChanged"
-            :via-has-one="false"
             :via-many-to-many="viaManyToMany"
             :via-resource="viaResource"
             :show-search="showSearch"
@@ -48,7 +49,10 @@
             @searched="performLazySearch"
         />
 
-        <LoadingView :loading="loading">
+        <LoadingView
+          :loading="loading"
+          :variant="!resourceResponse ? 'default' : 'overlay'"
+        >
             <IndexErrorDialog
                 v-if="resourceResponseError != null"
                 :resource="resourceInformation"
@@ -77,7 +81,7 @@
                     :selected-resources="selectedResources"
                     :selected-resource-ids="selectedResourceIds"
                     :actions-are-available="false"
-                    :should-show-checkboxes="shouldShowCheckBoxes"
+                    :should-show-checkboxes="shouldShowCheckboxes"
                     :via-resource="viaResource"
                     :via-resource-id="viaResourceId"
                     :via-relationship="viaRelationship"
@@ -88,7 +92,7 @@
                     @reset-order-by="resetOrderBy"
                     @delete="deleteResources"
                     @restore="restoreResources"
-                    @actionExecuted="getResources"
+                    @actionExecuted="handleActionExecuted"
                     ref="resourceTable"
                 />
 
@@ -168,7 +172,9 @@
                 selectAllMatchingChecked: computed(() => this.selectAllMatchingChecked),
                 selectAllOrSelectAllMatchingChecked: computed(() => this.selectAllOrSelectAllMatchingChecked),
                 selectAllAndSelectAllMatchingChecked: computed(() => this.selectAllAndSelectAllMatchingChecked),
-                selectAllIndeterminate: computed(() => this.selectAllIndeterminate)
+                selectAllIndeterminate: computed(() => this.selectAllIndeterminate),
+                orderByParameter: computed(() => this.orderByParameter),
+                orderByDirectionParameter: computed(() => this.orderByDirectionParameter),
             };
         },
 
@@ -252,6 +258,12 @@
             },
 
             ...mapActions(['fetchPolicies']),
+
+
+            handleActionExecuted() {
+                this.fetchPolicies()
+                this.getResources()
+            },
 
             updateQueryStringIfRequired(object) {
                 if (this.expandableStoreQuery) {
@@ -992,7 +1004,7 @@
             /**
              * Determine whether to show the selection checkboxes for resources
              */
-            shouldShowCheckBoxes() {
+            shouldShowCheckboxes() {
                 return (
                     Boolean(this.hasResources) && Boolean(this.authorizedToDeleteAnyResources || this.canShowDeleteMenu)
                 );
