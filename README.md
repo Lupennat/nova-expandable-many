@@ -8,14 +8,20 @@
 
 ## Requirements
 
-- `php: ^7.4 | ^8`
-- `laravel/nova: ^4`
+-   `php: ^7.4 | ^8`
+-   `laravel/nova: ^4`
 
 ## Installation
 
 ```
-composer require lupennat/nova-expandable-many
+composer require lupennat/nova-expandable-many:^3.0
 ```
+
+| NOVA     | PACKAGE |
+| -------- | ------- |
+| <4.29.5  | 1.x     |
+| <4.32.6  | 2.x     |
+| >=4.32.6 | 3.x     |
 
 ## Usage
 
@@ -25,12 +31,12 @@ Register Trait `HasExpandableMany` globally on Resources.
 
 ExpandableMany Package automatically enable a new method `expandable` for all Many Relationship Fields:
 
-- BelongsToMany
-- HasMany
-- HasManyThrough
-- MorphedByMany
-- MorphMany
-- MorphToMany
+-   BelongsToMany
+-   HasMany
+-   HasManyThrough
+-   MorphedByMany
+-   MorphMany
+-   MorphToMany
 
 The relation table (without any custom actions and lenses) will be displayed as a collapsable row on the index page.
 
