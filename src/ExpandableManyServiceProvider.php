@@ -88,13 +88,6 @@ class ExpandableManyServiceProvider extends ServiceProvider
                 return $this;
             }
 
-            if ($this instanceof HasMany) {
-                $this->expandableHook = true;
-                $this->component = 'has-many-expandable-field';
-
-                return $this;
-            }
-
             if ($this instanceof HasManyThrough) {
                 $this->expandableHook = true;
                 $this->component = 'has-many-through-expandable-field';
@@ -105,6 +98,13 @@ class ExpandableManyServiceProvider extends ServiceProvider
             if ($this instanceof MorphToMany) {
                 $this->expandableHook = true;
                 $this->component = 'morph-to-many-expandable-field';
+
+                return $this;
+            }
+
+            if ($this instanceof HasMany) {
+                $this->expandableHook = true;
+                $this->component = 'has-many-expandable-field';
 
                 return $this;
             }
