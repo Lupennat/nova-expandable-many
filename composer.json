@@ -7,14 +7,14 @@
     ],
     "authors": [
         {
-          "name": "Claudio Pennati",
-          "email": "claudio.pennati@gmail.com"
+            "name": "Claudio Pennati",
+            "email": "claudio.pennati@gmail.com"
         }
-      ],
+    ],
     "license": "MIT",
     "require": {
         "php": "^7.4|^8.0",
-        "laravel/nova": ">4.32.6"
+        "laravel/nova": ">=4.32.6"
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "^3.16"
@@ -37,10 +37,10 @@
     "minimum-stability": "dev",
     "prefer-stable": true,
     "repositories": [
-    {
-        "type": "composer",
-        "url": "https://nova.laravel.com"
-    }
+        {
+            "type": "composer",
+            "url": "https://nova.laravel.com"
+        }
     ],
     "scripts": {
         "php-cs-fixer": "vendor/bin/php-cs-fixer fix",
