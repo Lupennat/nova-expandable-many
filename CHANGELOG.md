@@ -1,3 +1,9 @@
+## v1.1.3 v2.0.2 v3.0.2
+
+### Bug Fix
+
+-   improve support for BelongsToMany and MorphToMany fields
+
 ## v1.1.2 v2.0.1 v3.0.1
 
 ### Bug Fix
