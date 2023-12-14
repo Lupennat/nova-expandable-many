@@ -14,6 +14,7 @@ use Laravel\Nova\Fields\FieldCollection;
 use Laravel\Nova\Fields\HasMany;
 use Laravel\Nova\Fields\HasManyThrough;
 use Laravel\Nova\Fields\MorphToMany;
+use Laravel\Nova\Http\Requests\NovaRequest;
 use Laravel\Nova\Nova;
 
 class ExpandableManyServiceProvider extends ServiceProvider
@@ -26,7 +27,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('expandable-many', __DIR__ . '/../dist/js/expandable-many.js');
+            Nova::script('expandable-many-v2', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
@@ -84,6 +85,9 @@ class ExpandableManyServiceProvider extends ServiceProvider
             if ($this instanceof BelongsToMany) {
                 $this->expandableHook = true;
                 $this->component = 'belongs-to-many-expandable-field';
+                if (app(NovaRequest::class)->isResourceIndexRequest()) {
+                    $this->required(false);
+                }
 
                 return $this;
             }
@@ -98,6 +102,9 @@ class ExpandableManyServiceProvider extends ServiceProvider
             if ($this instanceof MorphToMany) {
                 $this->expandableHook = true;
                 $this->component = 'morph-to-many-expandable-field';
+                if (app(NovaRequest::class)->isResourceIndexRequest()) {
+                    $this->required(false);
+                }
 
                 return $this;
             }
