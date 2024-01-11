@@ -48,9 +48,11 @@
         created() {
             this.openedField = this.currentOpenedField;
             this.openedId = this.currentOpenedId;
-            Nova.$on('expandable-opened', (openedField, openedId) => {
-                this.openedField = openedField;
-                this.openedId = openedId;
+            Nova.$on('expandable-opened', (resourceName, openedField, openedId) => {
+                if (this.resourceName === resourceName) {
+                    this.openedField = openedField;
+                    this.openedId = openedId;
+                }
             });
             this.$watch('expandableOpened', function (value) {
                 this.expandableRow.classList[value ? 'remove' : 'add']('hidden');
@@ -78,7 +80,7 @@
                 const openedField = this.expandableOpened ? '' : this.field.resourceName;
                 const openedId = this.expandableOpened ? '' : this.resource.id.value;
                 this.updateQueryStringIfRequired(openedField, openedId);
-                Nova.$emit('expandable-opened', openedField, openedId);
+                Nova.$emit('expandable-opened', this.resourceName, openedField, openedId);
             },
             updateQueryStringIfRequired(openedField, openedId) {
                 if (this.shouldStoreQueryStringAccordion) {
