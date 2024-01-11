@@ -1,3 +1,9 @@
+## v1.2.0 v2.1.0 v3.1.0
+
+### New
+
+-   support nested expandable
+
 ## v1.1.3 v2.0.2 v3.0.2
 
 ### Bug Fix
