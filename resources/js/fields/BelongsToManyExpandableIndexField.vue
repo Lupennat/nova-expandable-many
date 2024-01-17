@@ -4,7 +4,7 @@
             :field="field"
             :resource="resource"
             :resource-name="resourceName"
-            v-slot="{ expandableOpened, expandableStoreQuery }"
+            v-slot="{ expandableOpened, expandableStoreQuery, expandableUseStandardActions }"
         >
             <ExpandableResourceIndex
                 :field="field"
@@ -19,6 +19,7 @@
                 :should-enable-shortcut="false"
                 :expandable-opened="expandableOpened"
                 :expandable-store-query="expandableStoreQuery"
+                :expandable-use-standard-actions="expandableUseStandardActions"
             />
         </ExpandableField>
     </span>

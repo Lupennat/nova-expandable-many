@@ -1,3 +1,9 @@
+## v1.3.0 v2.2.0 v3.2.0
+
+### New
+
+-   `expandableUseStandardActions` meta
+
 ## v1.2.0 v2.1.0 v3.1.0
 
 ### New

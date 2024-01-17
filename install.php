@@ -2,8 +2,6 @@
 
 const MINIMUMVERSION = '4.29.6';
 
-unlink(__DIR__ . '/composer.lock');
-
 copy(__DIR__ . '/composer.json', __DIR__ . '/composer.json.original');
 
 $content = json_decode(file_get_contents(__DIR__ . '/composer.json'), true);

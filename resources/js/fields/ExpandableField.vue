@@ -18,6 +18,7 @@
                         <slot
                             :expandable-opened="expandableOpened"
                             :expandable-store-query="shouldStoreQueryStringRelations"
+                            :expandable-use-standard-actions="expandableUseStandardActions"
                         ></slot>
                     </div>
                 </td>
@@ -97,6 +98,9 @@
             },
             shouldStoreQueryStringRelations() {
                 return this.field.expandableStoreStatus === 'full';
+            },
+            expandableUseStandardActions() {
+                return Boolean(this.field.expandableUseStandardActions);
             },
             expandableFieldParameter() {
                 return `${this.resourceName}_expfield`;
