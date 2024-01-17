@@ -84,6 +84,15 @@ Expandable can be skipped and an empty field is shown (by Default is false)
         ])
 ```
 
+Expandable can disable standard actions (By Default is enabled)
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)->expandable()
+        ->withMeta([
+            'expandableUseStandardActions' => false, // disable create/edit/view/delete/restore
+        ])
+```
+
 ### Display Callback
 
 Expandable Many will resolve a display callback foreach resource, you can use it to manipulate meta attributes dinamically.

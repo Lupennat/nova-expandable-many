@@ -157,6 +157,10 @@
                 type: Boolean,
                 required: true,
             },
+            expandableUseStandardActions: {
+                type: Boolean,
+                required: true,
+            },
         },
 
         provide() {
@@ -825,14 +829,20 @@
              * Determine if any selected resources may be deleted.
              */
             authorizedToDeleteSelectedResources() {
-                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToDelete));
+                return (
+                    this.expandableUseStandardActions &&
+                    Boolean(_.find(this.selectedResources, resource => resource.authorizedToDelete))
+                );
             },
 
             /**
              * Determine if any selected resources may be force deleted.
              */
             authorizedToForceDeleteSelectedResources() {
-                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToForceDelete));
+                return (
+                    this.expandableUseStandardActions &&
+                    Boolean(_.find(this.selectedResources, resource => resource.authorizedToForceDelete))
+                );
             },
 
             /**
@@ -840,7 +850,9 @@
              */
             authorizedToViewAnyResources() {
                 return (
-                    this.resources.length > 0 && Boolean(_.find(this.resources, resource => resource.authorizedToView))
+                    this.expandableUseStandardActions &&
+                    this.resources.length > 0 &&
+                    Boolean(_.find(this.resources, resource => resource.authorizedToView))
                 );
             },
 
@@ -849,6 +861,7 @@
              */
             authorizedToUpdateAnyResources() {
                 return (
+                    this.expandableUseStandardActions &&
                     this.resources.length > 0 &&
                     Boolean(_.find(this.resources, resource => resource.authorizedToUpdate))
                 );
@@ -859,6 +872,7 @@
              */
             authorizedToForceDeleteAnyResources() {
                 return (
+                    this.expandableUseStandardActions &&
                     this.resources.length > 0 &&
                     Boolean(_.find(this.resources, resource => resource.authorizedToForceDelete))
                 );
@@ -868,7 +882,10 @@
              * Determine if any selected resources may be restored.
              */
             authorizedToRestoreSelectedResources() {
-                return Boolean(_.find(this.selectedResources, resource => resource.authorizedToRestore));
+                return (
+                    this.expandableUseStandardActions &&
+                    Boolean(_.find(this.selectedResources, resource => resource.authorizedToRestore))
+                );
             },
 
             /**
@@ -876,6 +893,7 @@
              */
             authorizedToDeleteAnyResources() {
                 return (
+                    this.expandableUseStandardActions &&
                     this.resources.length > 0 &&
                     Boolean(_.find(this.resources, resource => resource.authorizedToDelete))
                 );
@@ -886,9 +904,21 @@
              */
             authorizedToRestoreAnyResources() {
                 return (
+                    this.expandableUseStandardActions &&
                     this.resources.length > 0 &&
                     Boolean(_.find(this.resources, resource => resource.authorizedToRestore))
                 );
+            },
+
+            /**
+             * Determine if the user is authorized to create the current resource.
+             */
+            authorizedToCreate() {
+                if (['hasOneThrough', 'hasManyThrough'].indexOf(this.relationshipType) >= 0) {
+                    return false;
+                }
+
+                return (this.expandableUseStandardActions && this.resourceInformation?.authorizedToCreate) || false;
             },
 
             /**
