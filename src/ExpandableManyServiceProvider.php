@@ -27,7 +27,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('expandable-many-3', __DIR__ . '/../dist/js/expandable-many.js');
+            Nova::script('expandable-many-3.2', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
@@ -53,6 +53,10 @@ class ExpandableManyServiceProvider extends ServiceProvider
         Field::macro('expandable', function (callable $displayCallback = null) {
             // prevent loading relation when resolveForDisplay is called
             $this->value = new Collection([]);
+
+            if (!array_key_exists('expandableUseStandardActions', $this->meta)) {
+                $this->withMeta(['expandableUseStandardActions' => true]);
+            }
 
             if (!array_key_exists('expandableShowLabel', $this->meta)) {
                 $this->withMeta(['expandableShowLabel' => 'Show']);
