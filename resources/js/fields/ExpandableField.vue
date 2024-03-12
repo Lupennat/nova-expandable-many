@@ -4,14 +4,19 @@
             {{ __(field.expandableSkipLabel) }}
         </span>
         <span class="flex items-center" @click.stop="expandableToogle" v-else>
-            <span>{{ expandableOpened ? __(field.expandableHideLabel) : __(field.expandableShowLabel) }}</span>
-            <button
-                class="rounded border border-transparent h-6 w-6 ml-1 inline-flex items-center justify-center focus:outline-none focus:ring ring-primary-200"
-                :aria-label="expandableOpened ? __(field.expandableHideLabel) : __(field.expandableShowLabel)"
-                :aria-expanded="!expandableOpened ? 'true' : 'false'"
-            >
-                <CollapseButton :collapsed="!expandableOpened" />
-            </button>
+            <template v-if="isHtml">
+                <span v-html="expandableOpened ? __(field.expandableHideHtml) : __(field.expandableShowHtml)" />
+            </template>
+            <template v-else>
+                <span>{{ expandableOpened ? __(field.expandableHideLabel) : __(field.expandableShowLabel) }}</span>
+                <button
+                    class="rounded border border-transparent h-6 w-6 ml-1 inline-flex items-center justify-center focus:outline-none focus:ring ring-primary-200"
+                    :aria-label="expandableOpened ? __(field.expandableHideLabel) : __(field.expandableShowLabel)"
+                    :aria-expanded="!expandableOpened ? 'true' : 'false'"
+                >
+                    <CollapseButton :collapsed="!expandableOpened" />
+                </button>
+            </template>
             <Teleport :to="expandableRow" v-if="isMounted">
                 <td :colspan="columnCount">
                     <div class="py-4 px-2">
@@ -94,6 +99,9 @@
             },
         },
         computed: {
+            isHtml() {
+                return  this.expandableOpened ? this.field.expandableHideHtml !== '' : this.field.expandableShowHtml !== '';
+            },
             shouldStoreQueryStringAccordion() {
                 return this.field.expandableStoreStatus === 'accordion' || this.shouldStoreQueryStringRelations;
             },

@@ -46,9 +46,9 @@
         "php-cs-fixer": "vendor/bin/php-cs-fixer fix",
         "build": [
             "rm -rf .php-cs-fixer.cache",
-            "composer php-cs-fixer src",
             "rm -rf composer.lock",
             "php install.php",
+            "composer php-cs-fixer src",
             "npm ci",
             "npm run format",
             "npm run prod"
