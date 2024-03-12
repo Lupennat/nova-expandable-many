@@ -69,6 +69,18 @@ By Default expandable use `Show` and `Hide` as labels, you can change labels usi
         ])
 ```
 
+you can also define a custom HTML using 
+
+```php
+    HasMany::make('User Post', 'posts', Post::class)->expandable()
+        ->withMeta([
+            'expandableShowHtml' => '<strong>Custom Show Html</strong>',
+            'expandableHideHtml' => '<strong>Custom Hide Html</strong>',
+        ])
+```
+
+> if both custom label and HTML are defined, HTML will be used
+
 By Default expandable do not store on browser history any status, you can change it using meta
 
 ```php
