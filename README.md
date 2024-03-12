@@ -14,7 +14,7 @@
 ## Installation
 
 ```
-composer require lupennat/nova-expandable-many
+composer require lupennat/nova-expandable-many:^1.0
 ```
 
 ## Usage

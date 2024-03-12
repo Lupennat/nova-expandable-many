@@ -100,7 +100,9 @@
         },
         computed: {
             isHtml() {
-                return  this.expandableOpened ? this.field.expandableHideHtml !== '' : this.field.expandableShowHtml !== '';
+                return this.expandableOpened
+                    ? this.field.expandableHideHtml !== ''
+                    : this.field.expandableShowHtml !== '';
             },
             shouldStoreQueryStringAccordion() {
                 return this.field.expandableStoreStatus === 'accordion' || this.shouldStoreQueryStringRelations;
