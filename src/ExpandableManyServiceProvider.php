@@ -27,7 +27,7 @@ class ExpandableManyServiceProvider extends ServiceProvider
     public function boot()
     {
         Nova::serving(function (ServingNova $event) {
-            Nova::script('expandable-many-v2.2', __DIR__ . '/../dist/js/expandable-many.js');
+            Nova::script('expandable-many-v2.3', __DIR__ . '/../dist/js/expandable-many.js');
         });
 
         FieldCollection::macro('withoutListableFieldsNotExpandable', function () {
@@ -62,8 +62,16 @@ class ExpandableManyServiceProvider extends ServiceProvider
                 $this->withMeta(['expandableShowLabel' => 'Show']);
             }
 
+            if (!array_key_exists('expandableShowHtml', $this->meta)) {
+                $this->withMeta(['expandableShowHtml' => '']);
+            }
+
             if (!array_key_exists('expandableHideLabel', $this->meta)) {
                 $this->withMeta(['expandableHideLabel' => 'Hide']);
+            }
+
+            if (!array_key_exists('expandableHideHtml', $this->meta)) {
+                $this->withMeta(['expandableHideHtml' => '']);
             }
 
             if (!array_key_exists('expandableStoreStatus', $this->meta)) {

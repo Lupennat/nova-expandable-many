@@ -1,3 +1,10 @@
+## v1.4.0 v2.3.0 v3.3.0
+
+### New
+
+-   `expandableShowHtml` meta
+-   `expandableHideHtml` meta
+
 ## v1.3.0 v2.2.0 v3.2.0
 
 ### New
