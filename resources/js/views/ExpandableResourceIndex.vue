@@ -92,21 +92,6 @@
                     @actionExecuted="handleActionExecuted"
                     ref="resourceTable"
                 />
-
-                <ResourcePagination
-                    v-if="shouldShowPagination"
-                    :pagination-component="paginationComponent"
-                    :has-next-page="hasNextPage"
-                    :has-previous-page="hasPreviousPage"
-                    :load-more="loadMore"
-                    :select-page="selectPage"
-                    :total-pages="totalPages"
-                    :current-page="page"
-                    :per-page="perPage"
-                    :resource-count-label="resourceCountLabel"
-                    :current-resource-count="resourceCount"
-                    :all-matching-resource-count="allMatchingResourceCount"
-                />
             </template>
         </LoadingView>
     </Card>
@@ -120,7 +105,7 @@
         mapProps,
         InteractsWithQueryString,
     } from '@/mixins';
-    import ResourceTable from '../components/ResourceTable';
+    import ResourceTable from '@/components/ResourceTable';
     import ResourceTableToolbar from '../components/ResourceTableToolbar';
 
     import { computed } from 'vue';
